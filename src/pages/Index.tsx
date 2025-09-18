@@ -120,21 +120,22 @@ const Index = () => {
               </Swiper>
             </div>
             
-            <Input
-              type="text"
-              placeholder={typingPlaceholder}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
-              className="flex-1 border-0 text-gray-600 placeholder-gray-400 focus-visible:ring-0 focus:border focus:border-primary text-sm sm:text-base placeholder:text-xs sm:placeholder:text-sm"
-            />
-            
-            <Button 
-              onClick={handleSearchSubmit}
-              className="bg-transparent hover:bg-transparent text-muted-foreground px-3 py-2 rounded-md flex items-center justify-center"
-            >
-              <Search className="h-10 w-10" strokeWidth={3} />
-            </Button>
+            <div className="flex-1 relative">
+              <Input
+                type="text"
+                placeholder={typingPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+                className="w-full border-0 text-gray-600 placeholder-gray-400 focus-visible:ring-0 focus:border focus:border-primary text-sm sm:text-base placeholder:text-xs sm:placeholder:text-sm pr-12"
+              />
+              <button 
+                onClick={handleSearchSubmit}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground p-2 rounded-md flex items-center justify-center hover:bg-gray-100 transition-colors"
+              >
+                <Search className="h-6 w-6" strokeWidth={2} />
+              </button>
+            </div>
           </div>
         </div>
       </section>
