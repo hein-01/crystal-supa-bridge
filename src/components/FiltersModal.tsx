@@ -16,8 +16,10 @@ import {
   CarouselContent,
   CarouselItem,
   CarouselNext,
+  CarouselPrevious,
 } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
+import type { CarouselApi } from "@/components/ui/carousel";
 
 interface FiltersModalProps {
   onSearchChange: (search: string) => void;
@@ -48,6 +50,10 @@ export const FiltersModal = ({
   const [categoryProducts, setCategoryProducts] = useState<Record<string, string[]>>({
     "all": ["All Products"]
   });
+  const [categoryCarouselApi, setCategoryCarouselApi] = useState<CarouselApi>();
+  const [productsCarouselApi, setProductsCarouselApi] = useState<CarouselApi>();
+  const [canScrollCategoryPrev, setCanScrollCategoryPrev] = useState(false);
+  const [canScrollProductsPrev, setCanScrollProductsPrev] = useState(false);
 
   // Fetch categories and their popular products
   useEffect(() => {
@@ -82,6 +88,38 @@ export const FiltersModal = ({
 
     fetchCategoryProducts();
   }, []);
+
+  // Update scroll state for category carousel
+  useEffect(() => {
+    if (!categoryCarouselApi) return;
+
+    const onSelect = () => {
+      setCanScrollCategoryPrev(categoryCarouselApi.canScrollPrev());
+    };
+
+    categoryCarouselApi.on("select", onSelect);
+    onSelect();
+
+    return () => {
+      categoryCarouselApi.off("select", onSelect);
+    };
+  }, [categoryCarouselApi]);
+
+  // Update scroll state for products carousel
+  useEffect(() => {
+    if (!productsCarouselApi) return;
+
+    const onSelect = () => {
+      setCanScrollProductsPrev(productsCarouselApi.canScrollPrev());
+    };
+
+    productsCarouselApi.on("select", onSelect);
+    onSelect();
+
+    return () => {
+      productsCarouselApi.off("select", onSelect);
+    };
+  }, [productsCarouselApi]);
 
   const currentProducts = categoryProducts[category] || ["All Products"];
 
@@ -163,6 +201,7 @@ export const FiltersModal = ({
               </Label>
               <div className="w-full overflow-hidden relative">
                 <Carousel
+                  setApi={setCategoryCarouselApi}
                   opts={{
                     align: "start",
                     dragFree: true,
@@ -199,6 +238,9 @@ export const FiltersModal = ({
                       </CarouselItem>
                     ))}
                   </CarouselContent>
+                  {canScrollCategoryPrev && (
+                    <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white shadow-md border border-gray-200 hover:bg-gray-50" />
+                  )}
                   <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white shadow-md border border-gray-200 hover:bg-gray-50" />
                 </Carousel>
               </div>
@@ -211,6 +253,7 @@ export const FiltersModal = ({
               </Label>
               <div className="w-full overflow-hidden relative">
                 <Carousel
+                  setApi={setProductsCarouselApi}
                   opts={{
                     align: "start",
                     dragFree: true,
@@ -237,6 +280,9 @@ export const FiltersModal = ({
                       </CarouselItem>
                     ))}
                   </CarouselContent>
+                  {canScrollProductsPrev && (
+                    <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white shadow-md border border-gray-200 hover:bg-gray-50" />
+                  )}
                   <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white shadow-md border border-gray-200 hover:bg-gray-50" />
                 </Carousel>
               </div>
