@@ -40,7 +40,7 @@ export const Navbar = React.memo(() => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2 relative z-50 md:ml-16">
               <span className="text-xl md:text-2xl font-anton font-normal text-foreground bg-gradient-to-r from-primary via-blue-500 to-purple-500 bg-clip-text text-transparent animate-[shift-glow_3s_ease-in-out_infinite]">
-                GoLocalSg<span className="text-base md:text-lg">.com</span>
+                GoLocalSG<span className="text-base md:text-lg">.com</span>
               </span>
             </Link>
           </div>
