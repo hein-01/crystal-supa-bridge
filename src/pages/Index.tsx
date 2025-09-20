@@ -170,14 +170,14 @@ const Index = () => {
                 </h2>
                 <div className="space-y-4 text-sm md:text-base">
                   <div className="flex items-center justify-center lg:justify-start gap-3">
-                    <div className="w-6 h-6 bg-purple-600 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <span className="text-purple-200 text-sm font-bold">✓</span>
+                    <div className="w-6 h-6 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg" style={{backgroundColor: '#E8E3FD'}}>
+                      <span className="text-sm font-bold" style={{color: '#A89BFA'}}>✓</span>
                     </div>
                     <span className="text-slate-500 dark:text-slate-400 font-medium">Discover local businesses easily</span>
                   </div>
                   <div className="flex items-center justify-center lg:justify-start gap-3">
-                    <div className="w-6 h-6 bg-purple-600 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <span className="text-purple-200 text-sm font-bold">✓</span>
+                    <div className="w-6 h-6 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg" style={{backgroundColor: '#E8E3FD'}}>
+                      <span className="text-sm font-bold" style={{color: '#A89BFA'}}>✓</span>
                     </div>
                     <span className="text-slate-500 dark:text-slate-400 font-medium">Get a POS and website for as little as $12/month</span>
                   </div>
