@@ -165,21 +165,21 @@ const Index = () => {
               
               {/* Content */}
               <div className="flex-1 text-center lg:text-left max-w-2xl">
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent mb-4 leading-tight">
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-slate-600 via-purple-600 to-slate-600 dark:from-gray-300 dark:via-purple-300 dark:to-gray-300 bg-clip-text text-transparent mb-4 leading-tight">
                   Find a business or Start your online business!
                 </h2>
                 <div className="space-y-4 text-sm md:text-base">
-                  <div className="flex items-center justify-center lg:justify-start gap-3 group">
-                    <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-white text-sm font-bold">✓</span>
+                  <div className="flex items-center justify-center lg:justify-start gap-3">
+                    <div className="w-6 h-6 bg-purple-600 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <span className="text-purple-200 text-sm font-bold">✓</span>
                     </div>
-                    <span className="text-slate-700 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors duration-300">Discover local businesses easily</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Discover local businesses easily</span>
                   </div>
-                  <div className="flex items-center justify-center lg:justify-start gap-3 group">
-                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-white text-sm font-bold">✓</span>
+                  <div className="flex items-center justify-center lg:justify-start gap-3">
+                    <div className="w-6 h-6 bg-purple-600 rounded-full hidden md:flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <span className="text-purple-200 text-sm font-bold">✓</span>
                     </div>
-                    <span className="text-slate-700 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors duration-300">Get a POS and website for as little as $12/month</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Get a POS and website for as little as $12/month</span>
                   </div>
                 </div>
               </div>
