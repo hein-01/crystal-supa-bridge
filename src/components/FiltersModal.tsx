@@ -54,6 +54,7 @@ export const FiltersModal = ({
   const [productsCarouselApi, setProductsCarouselApi] = useState<CarouselApi>();
   const [canScrollCategoryPrev, setCanScrollCategoryPrev] = useState(false);
   const [canScrollProductsPrev, setCanScrollProductsPrev] = useState(false);
+  const [canScrollProductsNext, setCanScrollProductsNext] = useState(true);
 
   // Fetch categories and their popular products
   useEffect(() => {
@@ -111,6 +112,7 @@ export const FiltersModal = ({
 
     const onSelect = () => {
       setCanScrollProductsPrev(productsCarouselApi.canScrollPrev());
+      setCanScrollProductsNext(productsCarouselApi.canScrollNext());
     };
 
     productsCarouselApi.on("select", onSelect);
@@ -283,7 +285,9 @@ export const FiltersModal = ({
                   {canScrollProductsPrev && (
                     <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white shadow-md border border-gray-200 hover:bg-gray-50" />
                   )}
-                  <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white shadow-md border border-gray-200 hover:bg-gray-50" />
+                  {canScrollProductsNext && (
+                    <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white shadow-md border border-gray-200 hover:bg-gray-50" />
+                  )}
                 </Carousel>
               </div>
             </div>
