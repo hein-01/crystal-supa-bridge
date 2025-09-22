@@ -177,13 +177,18 @@ const Index = () => {
                   {/* Mobile Image Slider - replaces bullet points on mobile */}
                   <div className="block md:hidden px-2">
                     <Swiper
-                      spaceBetween={12}
-                      slidesPerView={2.2}
+                      spaceBetween={16}
+                      slidesPerView={3.2}
                       centeredSlides={true}
+                      autoplay={{
+                        delay: 2500,
+                        disableOnInteraction: false,
+                      }}
+                      modules={[Autoplay]}
                       className="mobile-business-slider"
                     >
                       <SwiperSlide>
-                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full">
+                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
                           <img 
                             src={mobileSlider1} 
                             alt="Local business directory app interface"
@@ -192,7 +197,7 @@ const Index = () => {
                         </div>
                       </SwiperSlide>
                       <SwiperSlide>
-                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full">
+                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
                           <img 
                             src={mobileSlider2} 
                             alt="Small business owner managing online store"
@@ -201,7 +206,7 @@ const Index = () => {
                         </div>
                       </SwiperSlide>
                       <SwiperSlide>
-                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full">
+                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
                           <img 
                             src={mobileSlider3} 
                             alt="Modern POS system interface"
