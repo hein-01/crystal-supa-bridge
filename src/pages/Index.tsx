@@ -175,15 +175,15 @@ const Index = () => {
                 </h2>
                 <div className="space-y-4 text-sm md:text-base">
                   {/* Mobile Image Slider - replaces bullet points on mobile */}
-                  <div className="block md:hidden">
+                  <div className="block md:hidden px-2">
                     <Swiper
-                      spaceBetween={15}
-                      slidesPerView={2.5}
+                      spaceBetween={8}
+                      slidesPerView={1.8}
                       centeredSlides={false}
                       className="mobile-business-slider"
                     >
                       <SwiperSlide>
-                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md max-w-[120px]">
+                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full">
                           <img 
                             src={mobileSlider1} 
                             alt="Local business directory app interface"
@@ -192,7 +192,7 @@ const Index = () => {
                         </div>
                       </SwiperSlide>
                       <SwiperSlide>
-                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md max-w-[120px]">
+                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full">
                           <img 
                             src={mobileSlider2} 
                             alt="Small business owner managing online store"
@@ -201,7 +201,7 @@ const Index = () => {
                         </div>
                       </SwiperSlide>
                       <SwiperSlide>
-                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md max-w-[120px]">
+                        <div className="aspect-[9/16] rounded-xl overflow-hidden shadow-md w-full">
                           <img 
                             src={mobileSlider3} 
                             alt="Modern POS system interface"
