@@ -177,9 +177,9 @@ const Index = () => {
                   {/* Mobile Image Slider - replaces bullet points on mobile */}
                   <div className="block md:hidden px-2">
                     <Swiper
-                      spaceBetween={8}
-                      slidesPerView={1.8}
-                      centeredSlides={false}
+                      spaceBetween={12}
+                      slidesPerView={2.2}
+                      centeredSlides={true}
                       className="mobile-business-slider"
                     >
                       <SwiperSlide>
