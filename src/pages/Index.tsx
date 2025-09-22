@@ -178,7 +178,7 @@ const Index = () => {
                   <div className="block md:hidden px-2">
                     <Swiper
                       spaceBetween={16}
-                      slidesPerView={3.2}
+                      slidesPerView={1.3}
                       centeredSlides={true}
                       autoplay={{
                         delay: 2500,
