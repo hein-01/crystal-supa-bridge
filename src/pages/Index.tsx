@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ShoppingBag, Compass, ArrowRight } from "lucide-react";
+import { ShoppingBag, Compass, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import searchIcon from "../assets/search-icon-new.png";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -175,7 +175,7 @@ const Index = () => {
                 </h2>
                 <div className="space-y-4 text-sm md:text-base">
                   {/* Mobile Image Slider - replaces bullet points on mobile */}
-                  <div className="block md:hidden px-2">
+                  <div className="block md:hidden px-2 relative">
                     <Swiper
                       spaceBetween={16}
                       slidesPerView={1.3}
@@ -184,7 +184,11 @@ const Index = () => {
                         delay: 2500,
                         disableOnInteraction: false,
                       }}
-                      modules={[Autoplay]}
+                      navigation={{
+                        nextEl: '.mobile-slider-next',
+                        prevEl: '.mobile-slider-prev',
+                      }}
+                      modules={[Autoplay, Navigation]}
                       className="mobile-business-slider"
                     >
                       <SwiperSlide>
@@ -215,6 +219,14 @@ const Index = () => {
                         </div>
                       </SwiperSlide>
                     </Swiper>
+                    
+                    {/* Navigation arrows */}
+                    <button className="mobile-slider-prev absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all duration-200">
+                      <ChevronLeft className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <button className="mobile-slider-next absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all duration-200">
+                      <ChevronRight className="w-5 h-5 text-gray-700" />
+                    </button>
                   </div>
                   
                   {/* Desktop bullet points */}
