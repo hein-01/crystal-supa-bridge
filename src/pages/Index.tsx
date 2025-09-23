@@ -192,7 +192,7 @@ const Index = () => {
                           <img 
                             src={mobileSlider1} 
                             alt="Local business directory app interface"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                       </SwiperSlide>
@@ -201,7 +201,7 @@ const Index = () => {
                           <img 
                             src={mobileSlider2} 
                             alt="Small business owner managing online store"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                       </SwiperSlide>
@@ -210,7 +210,7 @@ const Index = () => {
                           <img 
                             src={mobileSlider3} 
                             alt="Modern POS system interface"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                       </SwiperSlide>
