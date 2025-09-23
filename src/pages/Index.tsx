@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ShoppingBag, Compass, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingBag, Compass, ArrowRight } from "lucide-react";
 import searchIcon from "../assets/search-icon-new.png";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import MobileNavBar from "@/components/MobileNavBar";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
 import 'swiper/css';
+import 'swiper/css/autoplay';
 import 'swiper/css/navigation';
 // Import hero background images with error handling
 const heroBg1 = "https://github.com/hein-01/mysvgs/raw/552eaf7b2405ff01d6ea749d1f165971814ead9b/banner_image_desktop_01_1920_350.png";
@@ -174,56 +175,46 @@ const Index = () => {
                 </h2>
                 <div className="space-y-4 text-sm md:text-base">
                   {/* Mobile Image Slider - replaces bullet points on mobile */}
-                  <div className="block md:hidden relative">
-                    <div className="px-2">
-                      <Swiper
-                        spaceBetween={16}
-                        slidesPerView={1.3}
-                        centeredSlides={true}
-                        navigation={{
-                          nextEl: '.mobile-slider-next',
-                          prevEl: '.mobile-slider-prev',
-                        }}
-                        modules={[Navigation]}
-                        className="mobile-business-slider"
-                      >
-                        <SwiperSlide>
-                          <div className="h-[400px] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
-                            <img 
-                              src={mobileSlider1} 
-                              alt="Local business directory app interface"
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        </SwiperSlide>
-                        <SwiperSlide>
-                          <div className="h-[400px] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
-                            <img 
-                              src={mobileSlider2} 
-                              alt="Small business owner managing online store"
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        </SwiperSlide>
-                        <SwiperSlide>
-                          <div className="h-[400px] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
-                            <img 
-                              src={mobileSlider3} 
-                              alt="Modern POS system interface"
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        </SwiperSlide>
-                      </Swiper>
-                    </div>
-                    
-                    {/* Navigation arrows - positioned outside the padded container */}
-                    <button className="mobile-slider-prev absolute left-2 top-1/2 transform -translate-y-1/2 z-30 bg-white/95 hover:bg-white shadow-lg rounded-full p-2 transition-all duration-200 border border-gray-200">
-                      <ChevronLeft className="w-5 h-5 text-gray-700" />
-                    </button>
-                    <button className="mobile-slider-next absolute right-2 top-1/2 transform -translate-y-1/2 z-30 bg-white/95 hover:bg-white shadow-lg rounded-full p-2 transition-all duration-200 border border-gray-200">
-                      <ChevronRight className="w-5 h-5 text-gray-700" />
-                    </button>
+                  <div className="block md:hidden px-2">
+                    <Swiper
+                      spaceBetween={16}
+                      slidesPerView={1.3}
+                      centeredSlides={true}
+                      autoplay={{
+                        delay: 2500,
+                        disableOnInteraction: false,
+                      }}
+                      modules={[Autoplay]}
+                      className="mobile-business-slider"
+                    >
+                      <SwiperSlide>
+                        <div className="h-[400px] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
+                          <img 
+                            src={mobileSlider1} 
+                            alt="Local business directory app interface"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </SwiperSlide>
+                      <SwiperSlide>
+                        <div className="h-[400px] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
+                          <img 
+                            src={mobileSlider2} 
+                            alt="Small business owner managing online store"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </SwiperSlide>
+                      <SwiperSlide>
+                        <div className="h-[400px] rounded-xl overflow-hidden shadow-md w-full transition-all duration-300 hover:scale-105">
+                          <img 
+                            src={mobileSlider3} 
+                            alt="Modern POS system interface"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </SwiperSlide>
+                    </Swiper>
                   </div>
                   
                   {/* Desktop bullet points */}
