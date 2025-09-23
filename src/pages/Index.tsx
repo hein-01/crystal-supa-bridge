@@ -23,10 +23,10 @@ const heroBgMobile1 = "https://raw.githubusercontent.com/hein-01/mysvgs/552eaf7b
 const heroBgMobile2 = "https://github.com/hein-01/mysvgs/raw/552eaf7b2405ff01d6ea749d1f165971814ead9b/banner_image_mobile_02_420w_300h.png";
 const heroBgMobile3 = "https://raw.githubusercontent.com/hein-01/mysvgs/552eaf7b2405ff01d6ea749d1f165971814ead9b/banner_image_mobile_03_420w_300h.png";
 
-// Import mobile slider images
-import mobileSlider1 from '@/assets/mobile-slider-1.jpg';
-import mobileSlider2 from '@/assets/mobile-slider-2.jpg';
-import mobileSlider3 from '@/assets/mobile-slider-3.jpg';
+// Mobile slider image URLs
+const mobileSlider1 = "https://raw.githubusercontent.com/hein-01/mysvgs/36b442fd13c2ec342cbd1bcd874585614f4627fe/Mizu-01-420w-400h.png";
+const mobileSlider2 = "https://github.com/hein-01/mysvgs/raw/36b442fd13c2ec342cbd1bcd874585614f4627fe/Mizu-02-420w-400h.png";
+const mobileSlider3 = "https://raw.githubusercontent.com/hein-01/mysvgs/36b442fd13c2ec342cbd1bcd874585614f4627fe/Mizu-03-420w-400h.png";
 
 const Index = () => {
   console.log('Index component is rendering...'); // Debug log
