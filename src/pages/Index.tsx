@@ -13,7 +13,6 @@ import MobileNavBar from "@/components/MobileNavBar";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
 import 'swiper/css';
-import 'swiper/css/autoplay';
 import 'swiper/css/navigation';
 // Import hero background images with error handling
 const heroBg1 = "https://github.com/hein-01/mysvgs/raw/552eaf7b2405ff01d6ea749d1f165971814ead9b/banner_image_desktop_01_1920_350.png";
@@ -180,15 +179,11 @@ const Index = () => {
                       spaceBetween={16}
                       slidesPerView={1.3}
                       centeredSlides={true}
-                      autoplay={{
-                        delay: 2500,
-                        disableOnInteraction: false,
-                      }}
                       navigation={{
                         nextEl: '.mobile-slider-next',
                         prevEl: '.mobile-slider-prev',
                       }}
-                      modules={[Autoplay, Navigation]}
+                      modules={[Navigation]}
                       className="mobile-business-slider"
                     >
                       <SwiperSlide>
@@ -221,11 +216,11 @@ const Index = () => {
                     </Swiper>
                     
                     {/* Navigation arrows */}
-                    <button className="mobile-slider-prev absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all duration-200">
-                      <ChevronLeft className="w-5 h-5 text-gray-700" />
+                    <button className="mobile-slider-prev absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-200 border border-gray-200">
+                      <ChevronLeft className="w-6 h-6 text-gray-700" />
                     </button>
-                    <button className="mobile-slider-next absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all duration-200">
-                      <ChevronRight className="w-5 h-5 text-gray-700" />
+                    <button className="mobile-slider-next absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-200 border border-gray-200">
+                      <ChevronRight className="w-6 h-6 text-gray-700" />
                     </button>
                   </div>
                   
