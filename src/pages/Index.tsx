@@ -431,7 +431,7 @@ const Index = () => {
           {/* Full Width Banner */}
           <div className="mt-2.5">
             <a 
-              href="#all-products" 
+              href="/find-shops" 
               className="relative rounded-lg overflow-hidden shadow-lg cursor-pointer group block w-full"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-80"></div>
@@ -441,7 +441,7 @@ const Index = () => {
                 className="w-full h-[35px] object-cover"
               />
               <div className="absolute inset-0 flex items-center justify-center text-white">
-                <h3 className="text-sm font-semibold underline">Find Your Product</h3>
+                <h3 className="text-sm font-semibold underline">Find Product</h3>
               </div>
             </a>
           </div>
