@@ -297,6 +297,16 @@ export const PopularBusinessCard = ({ business }: PopularBusinessCardProps) => {
   return (
     <>
       <Card className="group w-[290px] h-[615px] flex flex-col shadow-xl hover:shadow-2xl transition-all duration-300 mx-auto bg-gradient-to-b from-background to-muted/20 relative">
+        
+        {/* Starting Price Tag - Top Left Corner of Card */}
+        {business.starting_price && (
+          <div className="absolute top-0 left-0 z-50">
+            <span className="bg-gray-600 text-white text-xs font-medium px-2 pb-1 shadow-lg uppercase rounded-tl-lg rounded-br-lg">
+              STARTS FROM {business.starting_price}
+            </span>
+          </div>
+        )}
+        
       <div className="relative overflow-hidden rounded-t-lg h-[290px]">
           <Swiper
             modules={[Navigation, Pagination]}
@@ -376,15 +386,6 @@ export const PopularBusinessCard = ({ business }: PopularBusinessCardProps) => {
             </>
           )}
         </Swiper>
-        
-        {/* Starting Price Tag - Top Left Corner */}
-        {business.starting_price && (
-          <div className="absolute top-0 left-0 z-40">
-            <span className="bg-gray-600 text-white text-xs font-medium px-2 pb-1 shadow-lg uppercase rounded-tl-lg rounded-br-lg">
-              STARTS FROM {business.starting_price}
-            </span>
-          </div>
-        )}
         
         <Button
           variant="ghost"
