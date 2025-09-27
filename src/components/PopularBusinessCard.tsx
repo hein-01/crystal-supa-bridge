@@ -615,7 +615,7 @@ export const PopularBusinessCard = ({ business }: PopularBusinessCardProps) => {
             className="w-full h-8 text-xs flex items-center justify-center gap-1"
             onClick={() => business.website && window.open(business.website, '_blank')}
           >
-            Visit Website
+            Go to Online Store
             <ChevronRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
           </Button>
          </div>
