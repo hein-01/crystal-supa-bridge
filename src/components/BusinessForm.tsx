@@ -37,8 +37,9 @@ interface BusinessFormData {
 const BUSINESS_OPTIONS = [
   "Cash on Delivery",
   "Pickup In-Store", 
-  "Digital Payments",
-  "Next-Day Delivery"
+  "Online Payments",
+  "Next-Day Delivery",
+  "We Sell Online"
 ];
 
 const BUSINESS_CATEGORIES = [
