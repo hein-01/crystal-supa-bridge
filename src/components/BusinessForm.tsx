@@ -37,7 +37,7 @@ interface BusinessFormData {
 const BUSINESS_OPTIONS = [
   "Cash on Delivery",
   "Pickup In-Store", 
-  "Online Payments",
+  "Free Wifi",
   "Next-Day Delivery",
   "We Sell Online"
 ];
@@ -974,8 +974,12 @@ export default function BusinessForm({ onSuccess, editingBusiness }: BusinessFor
                     id={option}
                     checked={formData.options.includes(option)}
                     onCheckedChange={(checked) => handleOptionChange(option, checked as boolean)}
+                    className={option === "We Sell Online" ? "border-[#F8CC41] data-[state=checked]:bg-[#F8CC41] data-[state=checked]:border-[#F8CC41]" : ""}
                   />
-                  <Label htmlFor={option} className="text-sm">
+                  <Label 
+                    htmlFor={option} 
+                    className={`text-sm ${option === "We Sell Online" ? "text-[#F8CC41]" : ""}`}
+                  >
                     {option}
                   </Label>
                 </div>
