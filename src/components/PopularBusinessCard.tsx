@@ -600,7 +600,9 @@ export const PopularBusinessCard = ({ business }: PopularBusinessCardProps) => {
                         : getOptionColors(index)
                     }`}
                   >
-                    {option === "Free Wifi" ? "Free WiFi" : option}
+                    {option === "Free Wifi" ? "FREE WIFI" : 
+                     option === "We Sell Online" ? "WE SELL ONLINE" : 
+                     option}
                   </span>
                 </div>
               ))}
