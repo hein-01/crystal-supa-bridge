@@ -974,12 +974,8 @@ export default function BusinessForm({ onSuccess, editingBusiness }: BusinessFor
                     id={option}
                     checked={formData.options.includes(option)}
                     onCheckedChange={(checked) => handleOptionChange(option, checked as boolean)}
-                    className={option === "We Sell Online" ? "border-[#F8CC41] data-[state=checked]:bg-[#F8CC41] data-[state=checked]:border-[#F8CC41]" : ""}
                   />
-                  <Label 
-                    htmlFor={option} 
-                    className={`text-sm ${option === "We Sell Online" ? "text-[#F8CC41]" : ""}`}
-                  >
+                  <Label htmlFor={option} className="text-sm">
                     {option}
                   </Label>
                 </div>

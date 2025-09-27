@@ -593,7 +593,13 @@ export const PopularBusinessCard = ({ business }: PopularBusinessCardProps) => {
             <div className="flex flex-wrap gap-x-1 gap-y-1">
               {business.business_options.map((option, index) => (
                 <div key={index}>
-                  <span className={`text-xs px-2 py-0.5 rounded border ${getOptionColors(index)}`}>
+                  <span 
+                    className={`text-xs px-2 py-0.5 rounded border ${
+                      option === "We Sell Online" 
+                        ? "border-[#F8CC41] text-[#F8CC41]" 
+                        : getOptionColors(index)
+                    }`}
+                  >
                     {option}
                   </span>
                 </div>
