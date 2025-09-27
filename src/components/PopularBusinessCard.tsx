@@ -596,11 +596,11 @@ export const PopularBusinessCard = ({ business }: PopularBusinessCardProps) => {
                   <span 
                     className={`text-xs px-2 py-0.5 rounded border ${
                       option === "We Sell Online" 
-                        ? "border-[#F8CC41] text-[#F8CC41]" 
+                        ? "border-[#B8860B] text-[#B8860B]" 
                         : getOptionColors(index)
                     }`}
                   >
-                    {option}
+                    {option === "Free Wifi" ? "Free WiFi" : option}
                   </span>
                 </div>
               ))}
