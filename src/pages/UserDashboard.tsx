@@ -465,7 +465,7 @@ export default function UserDashboard() {
                   </div>
                 </Button>
                 <Button 
-                  onClick={() => navigate("/list-business")}
+                  onClick={() => navigate("/service-selection")}
                   variant="outline"
                   className="h-24 md:h-32 p-4 md:p-6 flex-col gap-2 md:gap-3 bg-[hsl(var(--quick-actions-service))] hover:bg-[hsl(var(--quick-actions-service-hover))] border-[hsl(var(--quick-actions-service-foreground))]/20 text-[hsl(var(--quick-actions-service-foreground))] shadow-lg shadow-[hsl(var(--quick-actions-service-foreground))]/10 transition-all duration-200"
                 >
