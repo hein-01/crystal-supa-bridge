@@ -178,16 +178,44 @@ Deno.serve(async (req) => {
 
     console.log('Business created:', business.id);
 
+    // 2. Create services record FIRST to get the service_id
+    const { data: service, error: serviceError } = await supabase
+      .from('services')
+      .insert({
+        category_id: '2f12b3d2-35fa-4fda-ba30-6ca0ceab58d7', // Futsal category
+        service_key: 'futsal_booking',
+        popular_products: popularProducts,
+        services_description: description,
+        facilities: facilities,
+        rules: rules,
+        service_images: uploadedImageUrls,
+        contact_phone: phoneNumber,
+        contact_available_start: bookingStartTime,
+        contact_available_until: bookingEndTime,
+        service_listing_receipt: receiptUrl,
+        service_listing_expired: serviceListingExpired.toISOString().split('T')[0],
+        default_duration_min: 60,
+      })
+      .select()
+      .single();
+
+    if (serviceError) {
+      console.error('Service creation error:', serviceError);
+      throw serviceError;
+    }
+
+    console.log('Service created:', service.id);
+
     // Calculate base price (minimum of all slot prices)
     const basePrice = Math.min(...fieldDetails.map((f: any) => parseFloat(f.price)));
 
-    // 2. Create business_resources record
+    // 3. Create business_resources record using the service_id from step 2
     const { data: resource, error: resourceError } = await supabase
       .from('business_resources')
       .insert({
         business_id: business.id,
         name: businessName,
-        service_id: 1, // Assuming futsal service id is 1
+        service_id: service.id,
         max_capacity: maxCapacity,
         base_price: basePrice,
       })
@@ -201,7 +229,7 @@ Deno.serve(async (req) => {
 
     console.log('Resource created:', resource.id);
 
-    // 3. Create slots for each field
+    // 4. Create slots for each field
     const slotsToInsert = fieldDetails.map((field: any) => ({
       resource_id: resource.id,
       slot_name: field.name,
@@ -222,7 +250,7 @@ Deno.serve(async (req) => {
 
     console.log('Slots created:', slotsToInsert.length);
 
-    // 4. Create business_schedules for each day
+    // 5. Create business_schedules for each day
     const schedulesToInsert = operatingHours.map((hour: any, index: number) => ({
       resource_id: resource.id,
       day_of_week: index + 1, // 1 = Monday, 7 = Sunday
@@ -242,7 +270,7 @@ Deno.serve(async (req) => {
 
     console.log('Schedules created:', schedulesToInsert.length);
 
-    // 5. Create payment_methods records
+    // 6. Create payment_methods records
     const paymentMethodsToInsert: any[] = [];
     
     if (paymentMethodsData.cash) {
@@ -293,34 +321,6 @@ Deno.serve(async (req) => {
 
       console.log('Payment methods created:', paymentMethodsToInsert.length);
     }
-
-    // 6. Create services record
-    const { data: service, error: serviceError } = await supabase
-      .from('services')
-      .insert({
-        category_id: '2f12b3d2-35fa-4fda-ba30-6ca0ceab58d7', // Futsal category
-        service_key: 'futsal_booking',
-        popular_products: popularProducts,
-        services_description: description,
-        facilities: facilities,
-        rules: rules,
-        service_images: uploadedImageUrls,
-        contact_phone: phoneNumber,
-        contact_available_start: bookingStartTime,
-        contact_available_until: bookingEndTime,
-        service_listing_receipt: receiptUrl,
-        service_listing_expired: serviceListingExpired.toISOString().split('T')[0],
-        default_duration_min: 60,
-      })
-      .select()
-      .single();
-
-    if (serviceError) {
-      console.error('Service creation error:', serviceError);
-      throw serviceError;
-    }
-
-    console.log('Service created:', service.id);
 
     return new Response(
       JSON.stringify({
