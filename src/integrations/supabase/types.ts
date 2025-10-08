@@ -237,7 +237,11 @@ export type Database = {
           last_payment_date: string | null
           license_expired_date: string | null
           listing_expired_date: string | null
+          lite_pos: number | null
+          lite_pos_expired: string | null
           name: string
+          nearest_bus_stop: string | null
+          nearest_train_station: string | null
           odoo_expired_date: string | null
           owner_id: string
           payment_status: string
@@ -275,7 +279,11 @@ export type Database = {
           last_payment_date?: string | null
           license_expired_date?: string | null
           listing_expired_date?: string | null
+          lite_pos?: number | null
+          lite_pos_expired?: string | null
           name: string
+          nearest_bus_stop?: string | null
+          nearest_train_station?: string | null
           odoo_expired_date?: string | null
           owner_id: string
           payment_status?: string
@@ -313,7 +321,11 @@ export type Database = {
           last_payment_date?: string | null
           license_expired_date?: string | null
           listing_expired_date?: string | null
+          lite_pos?: number | null
+          lite_pos_expired?: string | null
           name?: string
+          nearest_bus_stop?: string | null
+          nearest_train_station?: string | null
           odoo_expired_date?: string | null
           owner_id?: string
           payment_status?: string
@@ -510,6 +522,8 @@ export type Database = {
           rules: string | null
           service_images: string[] | null
           service_key: string
+          service_listing_expired: string | null
+          service_listing_receipt: string | null
           services_description: string | null
           updated_at: string
         }
@@ -526,6 +540,8 @@ export type Database = {
           rules?: string | null
           service_images?: string[] | null
           service_key: string
+          service_listing_expired?: string | null
+          service_listing_receipt?: string | null
           services_description?: string | null
           updated_at?: string
         }
@@ -542,6 +558,8 @@ export type Database = {
           rules?: string | null
           service_images?: string[] | null
           service_key?: string
+          service_listing_expired?: string | null
+          service_listing_receipt?: string | null
           services_description?: string | null
           updated_at?: string
         }
@@ -710,7 +728,11 @@ export type Database = {
           last_payment_date: string | null
           license_expired_date: string | null
           listing_expired_date: string | null
+          lite_pos: number | null
+          lite_pos_expired: string | null
           name: string
+          nearest_bus_stop: string | null
+          nearest_train_station: string | null
           odoo_expired_date: string | null
           owner_id: string
           payment_status: string
