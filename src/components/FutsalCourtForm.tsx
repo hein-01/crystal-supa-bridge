@@ -284,6 +284,7 @@ export const FutsalCourtForm = () => {
         <input type="hidden" name="searchable_business" value="0" />
         <input type="hidden" name="business_categories.id" value="2f12b3d2-35fa-4fda-ba30-6ca0ceab58d7" />
         <input type="hidden" name="popular_products" value="Futsal Booking" />
+        <input type="hidden" name="max_capacity" value="1" />
         <input type="hidden" name="service_key" value="futsal_booking" />
         <input type="hidden" name="default_duration_min" value="60" />
         
