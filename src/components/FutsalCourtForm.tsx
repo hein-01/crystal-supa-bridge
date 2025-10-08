@@ -70,6 +70,7 @@ const formSchema = z.object({
   nearestBusStop: z.string().optional(),
   nearestTrainStation: z.string().optional(),
   zipCode: z.string().optional(),
+  googleMapLocation: z.string().optional(),
   infoWebsite: z.string().optional(),
   facebook: z.string().optional(),
   tiktok: z.string().optional(),
@@ -164,6 +165,7 @@ export const FutsalCourtForm = () => {
       nearestBusStop: "",
       nearestTrainStation: "",
       zipCode: "",
+      googleMapLocation: "",
       infoWebsite: "",
       facebook: "",
       tiktok: "",
@@ -257,19 +259,92 @@ export const FutsalCourtForm = () => {
     setIsSubmitting(true);
     
     try {
-      // TODO: Implement submission logic
-      console.log("Form values:", values);
-      console.log("Images:", images);
-      console.log("Receipt:", receiptFile);
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to create a listing",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('businessName', values.businessName);
+      formData.append('numberOfFields', values.numberOfFields);
+      formData.append('streetAddress', values.streetAddress);
+      formData.append('town', values.town);
+      formData.append('province', values.province);
+      formData.append('nearestBusStop', values.nearestBusStop || '');
+      formData.append('nearestTrainStation', values.nearestTrainStation || '');
+      formData.append('googleMapLocation', values.googleMapLocation || '');
+      formData.append('facebook', values.facebook || '');
+      formData.append('tiktok', values.tiktok || '');
+      formData.append('infoWebsite', values.infoWebsite || '');
+      formData.append('priceCurrency', values.priceCurrency);
+      formData.append('posLitePrice', values.posLitePrice);
+      formData.append('serviceListingPrice', values.serviceListingPrice);
+      formData.append('posLiteOption', values.posLiteOption);
+      formData.append('phoneNumber', values.phoneNumber);
+      formData.append('bookingStartTime', values.bookingStartTime);
+      formData.append('bookingEndTime', values.bookingEndTime);
+      formData.append('description', values.description);
+      formData.append('facilities', JSON.stringify(values.facilities));
+      formData.append('rules', JSON.stringify(values.rules));
+      formData.append('popularProducts', 'Futsal Booking');
+      formData.append('maxCapacity', '1');
+      formData.append('fieldDetails', JSON.stringify(values.fieldDetails));
+      formData.append('operatingHours', JSON.stringify(values.operatingHours));
+      formData.append('paymentMethods', JSON.stringify(values.paymentMethods));
+
+      // Add images
+      images.forEach((image, index) => {
+        formData.append(`image_${index}`, image);
+      });
+
+      // Add receipt
+      if (receiptFile) {
+        formData.append('receiptFile', receiptFile);
+      }
+
+      // Submit to edge function
+      const response = await fetch(
+        `https://mfclqtbudstlthtnhqpj.supabase.co/functions/v1/submit-futsal-listing`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to create listing');
+      }
       
       toast({
         title: "Success!",
-        description: "Your futsal court listing has been created",
+        description: "Your futsal court listing has been created and is pending approval",
       });
+
+      // Reset form
+      form.reset();
+      setImages([]);
+      setImagePreview([]);
+      setReceiptFile(null);
+
     } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to create listing. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create listing. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -1019,10 +1094,24 @@ export const FutsalCourtForm = () => {
 
             <FormField
               control={form.control}
-              name="zipCode"
+              name="googleMapLocation"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Google Map Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Google Maps URL" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="zipCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Zip Code</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter zip code" {...field} />
                   </FormControl>
