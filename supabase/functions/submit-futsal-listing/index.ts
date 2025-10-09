@@ -207,7 +207,20 @@ Deno.serve(async (req) => {
     console.log('Service created:', service.id);
 
     // Calculate base price (minimum of all slot prices)
-    const basePrice = Math.min(...fieldDetails.map((f: any) => parseFloat(f.price)));
+    const prices = fieldDetails.map((f: any) => {
+      const price = parseFloat(f.price);
+      if (isNaN(price) || !isFinite(price)) {
+        throw new Error(`Invalid price value: ${f.price}`);
+      }
+      return price;
+    });
+    
+    if (prices.length === 0) {
+      throw new Error('No field details provided');
+    }
+    
+    const basePrice = Math.min(...prices);
+    console.log('Calculated base price:', basePrice);
 
     // 3. Create business_resources record using the service_id from step 2
     const { data: resource, error: resourceError } = await supabase
