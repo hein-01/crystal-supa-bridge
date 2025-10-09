@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/form";
 import { Phone, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { convertTo24HourFormat } from "@/lib/timeUtils";
 
 const formSchema = z.object({
   businessName: z.string().min(1, "Business name is required"),
@@ -290,8 +291,8 @@ export const FutsalCourtForm = () => {
       formData.append('serviceListingPrice', values.serviceListingPrice);
       formData.append('posLiteOption', values.posLiteOption);
       formData.append('phoneNumber', values.phoneNumber);
-      formData.append('bookingStartTime', values.bookingStartTime);
-      formData.append('bookingEndTime', values.bookingEndTime);
+      formData.append('bookingStartTime', convertTo24HourFormat(values.bookingStartTime));
+      formData.append('bookingEndTime', convertTo24HourFormat(values.bookingEndTime));
       formData.append('description', values.description);
       formData.append('facilities', JSON.stringify(values.facilities));
       formData.append('rules', JSON.stringify(values.rules));
