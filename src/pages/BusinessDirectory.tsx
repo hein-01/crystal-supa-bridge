@@ -82,6 +82,7 @@ export default function BusinessDirectory() {
       let query = supabase
         .from("businesses")
         .select("*")
+        .eq("searchable_business", true)
         .order("rating", { ascending: false })
         .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
