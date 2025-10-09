@@ -266,25 +266,39 @@ Deno.serve(async (req) => {
 
     console.log('Slots created:', slotsToInsert.length);
 
-    // 5. Create business_schedules for each day
-    const schedulesToInsert = operatingHours.map((hour: any, index: number) => ({
-      resource_id: resource.id,
-      day_of_week: index + 1, // 1 = Monday, 7 = Sunday
-      is_open: !hour.closed,
-      open_time: hour.closed ? null : hour.openTime,
-      close_time: hour.closed ? null : hour.closeTime,
-    }));
+    // 5. Create business_schedules for each day (only insert open days)
+    const schedulesToInsert = operatingHours
+      .map((hour: any, index: number) => {
+        // Skip closed days - don't insert records for them
+        if (hour.closed) {
+          return null;
+        }
+        
+        return {
+          resource_id: resource.id,
+          day_of_week: index + 1, // 1 = Monday, 7 = Sunday
+          is_open: true,
+          open_time: hour.openTime,
+          close_time: hour.closeTime,
+        };
+      })
+      .filter((schedule: any) => schedule !== null); // Remove null entries for closed days
 
-    const { error: schedulesError } = await supabase
-      .from('business_schedules')
-      .insert(schedulesToInsert);
+    // Only insert if there are open days
+    if (schedulesToInsert.length > 0) {
+      const { error: schedulesError } = await supabase
+        .from('business_schedules')
+        .insert(schedulesToInsert);
 
-    if (schedulesError) {
-      console.error('Schedules creation error:', schedulesError);
-      throw schedulesError;
+      if (schedulesError) {
+        console.error('Schedules creation error:', schedulesError);
+        throw schedulesError;
+      }
+
+      console.log('Schedules created:', schedulesToInsert.length);
+    } else {
+      console.log('No open days - skipping schedule creation');
     }
-
-    console.log('Schedules created:', schedulesToInsert.length);
 
     // 6. Create payment_methods records
     const paymentMethodsToInsert: any[] = [];
