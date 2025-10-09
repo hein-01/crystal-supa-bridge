@@ -179,11 +179,14 @@ Deno.serve(async (req) => {
     console.log('Business created:', business.id);
 
     // 2. Create services record FIRST to get the service_id
+    // Generate unique service_key using business_id
+    const uniqueServiceKey = `futsal_booking_${business.id}`;
+    
     const { data: service, error: serviceError } = await supabase
       .from('services')
       .insert({
         category_id: '2f12b3d2-35fa-4fda-ba30-6ca0ceab58d7', // Futsal category
-        service_key: 'futsal_booking',
+        service_key: uniqueServiceKey,
         popular_products: popularProducts,
         services_description: description,
         facilities: facilities,
