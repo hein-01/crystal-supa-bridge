@@ -265,5 +265,5 @@ All colors MUST be HSL.
 }
 
 .animate-scroll-rtl {
-  animation: scroll-rtl 15s linear infinite;
+  animation: scroll-rtl 8s linear infinite;
 }
