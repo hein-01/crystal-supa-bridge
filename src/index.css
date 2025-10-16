@@ -253,3 +253,17 @@ All colors MUST be HSL.
   background: hsl(var(--primary)) !important;
   opacity: 1 !important;
 }
+
+/* Right-to-left scrolling animation for placeholder */
+@keyframes scroll-rtl {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-scroll-rtl {
+  animation: scroll-rtl 15s linear infinite;
+}
