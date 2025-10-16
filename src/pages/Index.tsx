@@ -150,8 +150,13 @@ const Index = () => {
             <div className="flex-1 relative">
               {!isSearchFocused && !searchTerm && (
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none overflow-hidden w-[calc(100%-4rem)] z-10">
-                  <div className="animate-scroll-rtl whitespace-nowrap text-gray-400 text-xs sm:text-sm">
-                    Tap a category to select or deselect it, then enter your search keyword.
+                  <div className="flex animate-scroll-rtl">
+                    <span className="whitespace-nowrap text-gray-400 text-xs sm:text-sm pr-8">
+                      Tap a category to select or deselect it, then enter your search keyword.
+                    </span>
+                    <span className="whitespace-nowrap text-gray-400 text-xs sm:text-sm pr-8">
+                      Tap a category to select or deselect it, then enter your search keyword.
+                    </span>
                   </div>
                 </div>
               )}
