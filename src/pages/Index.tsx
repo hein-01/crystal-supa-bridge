@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShoppingBag, Compass, ArrowRight } from "lucide-react";
@@ -14,6 +14,7 @@ import Footer from "@/components/Footer";
 import MobileNavBar from "@/components/MobileNavBar";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
 import 'swiper/css';
 import 'swiper/css/autoplay';
 import 'swiper/css/navigation';
@@ -34,6 +35,8 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("product");
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
+  const [isCarouselStopped, setIsCarouselStopped] = useState(false);
+  const swiperRef = useRef<SwiperType | null>(null);
   const navigate = useNavigate();
   const heroBackgrounds = [heroBg1, heroBg2, heroBg3];
   const heroBackgroundsMobile = [heroBgMobile1, heroBgMobile2, heroBgMobile3];
@@ -53,10 +56,28 @@ const Index = () => {
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setIsCarouselStopped(true);
+    
+    // Stop the swiper autoplay
+    if (swiperRef.current && swiperRef.current.autoplay) {
+      swiperRef.current.autoplay.stop();
+    }
+  };
+
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/find-shops?search=${encodeURIComponent(searchTerm.trim())}`);
+      // Redirect based on selected category
+      if (selectedCategory === "service") {
+        navigate(`/find-services?search=${encodeURIComponent(searchTerm.trim())}`);
+      } else if (selectedCategory === "business") {
+        navigate(`/find-shops?search=${encodeURIComponent(searchTerm.trim())}`);
+      } else {
+        // product category also goes to find-shops
+        navigate(`/find-shops?search=${encodeURIComponent(searchTerm.trim())}`);
+      }
     }
   };
   console.log('Index component returning JSX...'); // Debug log
@@ -85,12 +106,33 @@ const Index = () => {
         <div className="absolute left-4 right-4 top-full transform -translate-y-1/2 z-20">
           <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-xl p-2 flex items-center">
             <div className="bg-yellow-400 rounded-l-md overflow-hidden">
-              <Swiper direction="vertical" spaceBetween={0} slidesPerView={1} autoplay={{
-              delay: 2000,
-              disableOnInteraction: false
-            }} loop={true} className="h-10 w-full" modules={[Autoplay]}>
+              <Swiper 
+                direction="vertical" 
+                spaceBetween={0} 
+                slidesPerView={1} 
+                autoplay={!isCarouselStopped ? {
+                  delay: 2000,
+                  disableOnInteraction: false
+                } : false}
+                loop={!isCarouselStopped} 
+                className="h-10 w-full" 
+                modules={[Autoplay]}
+                onSwiper={(swiper) => {
+                  swiperRef.current = swiper;
+                }}
+                allowTouchMove={false}
+              >
                 {categories.map(category => <SwiperSlide key={category.value} className="h-10 flex items-center">
-                     <button onClick={() => setSelectedCategory(category.value)} className={`w-full h-full text-black font-medium text-xs sm:text-sm flex items-center justify-center px-1 sm:px-4 ${selectedCategory === category.value ? 'bg-yellow-500' : 'bg-yellow-400'}`}>
+                     <button 
+                       onClick={() => handleCategorySelect(category.value)} 
+                       className={`w-full h-full text-black font-medium text-xs sm:text-sm flex items-center justify-center px-1 sm:px-4 transition-all duration-300 ${
+                         selectedCategory === category.value && isCarouselStopped
+                           ? 'bg-yellow-400 border-2 border-primary shadow-lg' 
+                           : selectedCategory === category.value 
+                           ? 'bg-yellow-500' 
+                           : 'bg-yellow-400'
+                       }`}
+                     >
                       {category.label}
                     </button>
                   </SwiperSlide>)}
