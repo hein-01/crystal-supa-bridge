@@ -57,12 +57,19 @@ const Index = () => {
     return () => clearInterval(interval);
   }, []);
   const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
-    setIsCarouselStopped(true);
-    
-    // Stop the swiper autoplay
-    if (swiperRef.current && swiperRef.current.autoplay) {
-      swiperRef.current.autoplay.stop();
+    // If clicking the same category, deselect and restart carousel
+    if (selectedCategory === category && isCarouselStopped) {
+      setIsCarouselStopped(false);
+      if (swiperRef.current && swiperRef.current.autoplay) {
+        swiperRef.current.autoplay.start();
+      }
+    } else {
+      // New selection, stop carousel
+      setSelectedCategory(category);
+      setIsCarouselStopped(true);
+      if (swiperRef.current && swiperRef.current.autoplay) {
+        swiperRef.current.autoplay.stop();
+      }
     }
   };
 
