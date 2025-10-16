@@ -147,7 +147,7 @@ const Index = () => {
             </div>
             
             <div className="flex-1 relative">
-              <Input type="text" placeholder="Search by business name, etc" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearchSubmit()} className="w-full border border-[#F5F4F8] border-l-0 hover:border-l-0 focus:border-l-0 rounded-l-none text-gray-600 placeholder-gray-400 focus-visible:ring-0 text-sm sm:text-base placeholder:text-xs sm:placeholder:text-sm pr-12" />
+              <Input type="text" placeholder="Tap a category to select or deselect it, then enter your search keyword." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearchSubmit()} className="w-full border border-[#F5F4F8] border-l-0 hover:border-l-0 focus:border-l-0 rounded-l-none text-gray-600 placeholder-gray-400 focus-visible:ring-0 text-sm sm:text-base placeholder:text-xs sm:placeholder:text-sm pr-12" />
               <button onClick={handleSearchSubmit} className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 rounded-md flex items-center justify-center hover:bg-primary hover:bg-opacity-10 active:bg-primary active:bg-opacity-10 transition-colors duration-200">
                 <ArrowRight className="h-6 w-6 text-primary hover:text-white active:text-white transition-colors duration-200" />
               </button>
