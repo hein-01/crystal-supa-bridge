@@ -196,6 +196,13 @@ const Index = () => {
                   Find a business or<br className="sm:hidden" /> Start your online business!
                 </h2>
                 
+                {/* GoLar Introduction */}
+                <div className="text-center max-w-2xl px-6 mb-6">
+                  <p className="text-foreground/90 leading-relaxed text-sm">
+                    Hi, I&apos;m GoLar — nice to meet you! I&apos;m here to gather and share info about meaningful but hard-to-find individuals and organizations — like community fundraisers and free service providers — so I can better support you when you need it most. 💜  If you know any such people or groups, I&apos;d love your suggestion! Meanwhile, my team — Mizu, Min, and I — are here to help you discover businesses and book services with ease.  Enjoy exploring!
+                  </p>
+                </div>
+                
                 {/* CTA Buttons at Bottom */}
                 <div className="flex flex-col md:flex-row gap-4 mt-4">
                   <Button className="bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white px-6 py-3 rounded-xl font-medium text-sm shadow-xl hover:shadow-2xl transition-all duration-300">
