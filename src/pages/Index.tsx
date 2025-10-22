@@ -198,8 +198,8 @@ const Index = () => {
                 
                 {/* GoLar Introduction */}
                 <div className="text-center max-w-2xl px-6 mb-6">
-                  <p className="text-foreground/90 leading-relaxed text-sm">
-                    Hi, I&apos;m GoLar — nice to meet you! I&apos;m here to gather and share info about meaningful but hard-to-find individuals and organizations — like community fundraisers and free service providers — so I can better support you when you need it most. 💜  If you know any such people or groups, I&apos;d love your suggestion! Meanwhile, my team — Mizu, Min, and I — are here to help you discover businesses and book services with ease.  Enjoy exploring!
+                  <p className="text-sm leading-relaxed bg-gradient-to-r from-slate-600 via-purple-600 to-pink-600 dark:from-gray-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent animate-fade-in">
+                    Hi, I&apos;m GoLar — nice to meet you! I&apos;m here to gather and share info about meaningful but hard-to-find individuals and organizations — like community fundraisers and free service providers — so I can better support you when you need it most. 💜 If you know any such people or groups, I&apos;d love your suggestion!
                   </p>
                 </div>
                 
@@ -233,16 +233,8 @@ const Index = () => {
                 
                 {/* GoLar Introduction */}
                 <div className="text-center max-w-2xl px-6 mb-6">
-                  <p className="text-foreground/90 leading-relaxed">
-                    Hi, I&apos;m GoLar — nice to meet you!<br />
-                    I&apos;m here to gather and share info about meaningful but hard-to-find individuals and organizations — like community fundraisers and free service providers — so I can better support you when you need it most. 💜
-                  </p>
-                  <p className="text-foreground/90 leading-relaxed mt-3">
-                    If you know any such people or groups, I&apos;d love your suggestion!<br />
-                    Meanwhile, my team — Mizu, Min, and I — are here to help you discover businesses and book services with ease.
-                  </p>
-                  <p className="text-foreground/90 leading-relaxed mt-3">
-                    Enjoy exploring!
+                  <p className="text-base leading-relaxed bg-gradient-to-r from-slate-600 via-purple-600 to-pink-600 dark:from-gray-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent animate-fade-in">
+                    Hi, I&apos;m GoLar — nice to meet you! I&apos;m here to gather and share info about meaningful but hard-to-find individuals and organizations — like community fundraisers and free service providers — so I can better support you when you need it most. 💜 If you know any such people or groups, I&apos;d love your suggestion!
                   </p>
                 </div>
                 
