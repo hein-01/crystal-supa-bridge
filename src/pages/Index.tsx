@@ -193,7 +193,7 @@ const Index = () => {
                 
                 {/* Centered Text */}
                 <h2 className="text-lg bg-white bg-gradient-to-r from-slate-600 via-purple-600 to-slate-600 dark:from-gray-300 dark:via-purple-300 dark:to-gray-300 bg-clip-text text-transparent mb-4 leading-relaxed px-4 rounded-lg md:text-xl font-bold text-center py-0">
-                  Find a business or<br className="sm:hidden" /> Start your online business!
+                  Book services, find products or shops, and manage your online business!
                 </h2>
                 
                 {/* GoLar Introduction */}
@@ -228,7 +228,7 @@ const Index = () => {
                 
                 {/* Centered Heading */}
                 <h2 className="text-2xl xl:text-3xl font-bold bg-white bg-gradient-to-r from-slate-600 via-purple-600 to-slate-600 dark:from-gray-300 dark:via-purple-300 dark:to-gray-300 bg-clip-text text-transparent mb-4 leading-relaxed text-center px-4 py-2 rounded-lg">
-                  Find a business or Start your online business!
+                  Book services, find products or shops, and manage your online business!
                 </h2>
                 
                 {/* GoLar Introduction */}
