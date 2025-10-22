@@ -5,14 +5,15 @@ const Footer = () => {
         <div className="text-center">
           {/* Company Group Info */}
           <div className="mb-6">
-            <div className="flex items-center justify-center mb-3">
-              <div className="text-2xl font-bold text-primary mr-2">
-                Business
-              </div>
-              <div className="text-2xl font-light text-muted-foreground">
-                Directory Group
-              </div>
+            <div className="mb-3">
+              <h2 className="text-2xl font-bold text-primary">
+                Welcome To GoLocalSG.com!
+              </h2>
             </div>
+            
+            <p className="text-xs text-muted-foreground mb-3">
+              Sister platforms offering services across Thailand and Malaysia.
+            </p>
             
             {/* Service Logos */}
             <div className="flex items-center justify-center space-x-6 mb-4">
@@ -20,14 +21,14 @@ const Footer = () => {
                 <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">B</span>
                 </div>
-                <span className="text-sm font-medium text-foreground">BusinessFinder</span>
+                <span className="text-sm font-medium text-foreground">YaYou App</span>
               </div>
               
               <div className="flex items-center space-x-2">
                 <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">D</span>
                 </div>
-                <span className="text-sm font-medium text-foreground">Directory.com</span>
+                <span className="text-sm font-medium text-foreground">BooknGet.asia</span>
               </div>
             </div>
             
