@@ -32,7 +32,7 @@ const Footer = () => {
             </div>
             
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Directory.com is part of Business Directory Group Limited, one of the world's leading providers of business discovery services.
+              GoLocalSG.com is your AI-powered platform and mobile app for booking services, offering your own services to earn money, discovering products, and managing your business online.
             </p>
           </div>
         </div>
