@@ -17,19 +17,16 @@ const Footer = () => {
             
             {/* Service Logos */}
             <div className="flex items-center justify-center space-x-6 mb-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">B</span>
-                </div>
-                <span className="text-sm font-medium text-foreground">YaYou App</span>
-              </div>
+              <span className="text-sm font-medium text-primary">YaYou App</span>
               
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">D</span>
-                </div>
-                <span className="text-sm font-medium text-foreground">BooknGet.asia</span>
-              </div>
+              <a 
+                href="https://www.booknget.asia" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-secondary hover:underline"
+              >
+                BooknGet.asia
+              </a>
             </div>
             
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
