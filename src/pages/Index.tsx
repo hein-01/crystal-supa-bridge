@@ -20,6 +20,7 @@ import 'swiper/css/autoplay';
 import 'swiper/css/navigation';
 import { useTypingEffect } from "@/hooks/useTypingEffect";
 import { useIsMobile } from "@/hooks/use-mobile";
+// Updated banner images
 import mobileBanner1 from "../assets/mobile-banner-1.png";
 import mobileBanner2 from "../assets/mobile-banner-2.png";
 import mobileBanner3 from "../assets/mobile-banner-3.png";
