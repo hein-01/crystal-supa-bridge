@@ -20,17 +20,17 @@ import 'swiper/css/autoplay';
 import 'swiper/css/navigation';
 import { useTypingEffect } from "@/hooks/useTypingEffect";
 import { useIsMobile } from "@/hooks/use-mobile";
-// Updated banner images
-import mobileBanner1 from "../assets/mobile-banner-1.png";
-import mobileBanner2 from "../assets/mobile-banner-2.png";
-import mobileBanner3 from "../assets/mobile-banner-3.png";
-import mobileBanner4 from "../assets/mobile-banner-4.png";
-import mobileBanner5 from "../assets/mobile-banner-5.png";
-import desktopBanner1 from "../assets/desktop-banner-1.png";
-import desktopBanner2 from "../assets/desktop-banner-2.png";
-import desktopBanner3 from "../assets/desktop-banner-3.png";
-import desktopBanner4 from "../assets/desktop-banner-4.png";
-import desktopBanner5 from "../assets/desktop-banner-5.png";
+// Updated banner images (v2)
+import mobileBanner1 from "../assets/mobile-banner-1-v2.png";
+import mobileBanner2 from "../assets/mobile-banner-2-v2.png";
+import mobileBanner3 from "../assets/mobile-banner-3-v2.png";
+import mobileBanner4 from "../assets/mobile-banner-4-v2.png";
+import mobileBanner5 from "../assets/mobile-banner-5-v2.png";
+import desktopBanner1 from "../assets/desktop-banner-1-v2.png";
+import desktopBanner2 from "../assets/desktop-banner-2-v2.png";
+import desktopBanner3 from "../assets/desktop-banner-3-v2.png";
+import desktopBanner4 from "../assets/desktop-banner-4-v2.png";
+import desktopBanner5 from "../assets/desktop-banner-5-v2.png";
 
 // Mobile slider image URLs
 const mobileSlider1 = "https://github.com/hein-01/mysvgs/raw/1df6944ef5b84ea6383de1af9e25c88273798a99/Mizu-01-280w-400h.png";
