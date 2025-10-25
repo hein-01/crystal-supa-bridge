@@ -65,7 +65,7 @@ const Index = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBgIndex(prev => (prev + 1) % heroBackgrounds.length);
-    }, 2000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [heroBackgrounds.length]);
   const handleCategorySelect = (category: string) => {
