@@ -73,6 +73,45 @@ Deno.serve(async (req) => {
     const paymentMethodsStr = formData.get('paymentMethods') as string;
     const paymentMethodsData = JSON.parse(paymentMethodsStr);
 
+    const pricingRulesStr = formData.get('pricingRules') as string | null;
+    let pricingRules: Array<{
+      rule_name: string;
+      price_override: number;
+      day_of_week: number[] | null;
+      start_time: string;
+      end_time: string;
+    }> = [];
+
+    if (pricingRulesStr) {
+      try {
+        const parsed = JSON.parse(pricingRulesStr);
+        if (Array.isArray(parsed)) {
+          pricingRules = parsed
+            .filter((rule) =>
+              rule &&
+              typeof rule.rule_name === 'string' &&
+              rule.rule_name.trim().length > 0 &&
+              typeof rule.price_override === 'number' &&
+              !Number.isNaN(rule.price_override) &&
+              typeof rule.start_time === 'string' &&
+              typeof rule.end_time === 'string'
+            )
+            .map((rule) => ({
+              rule_name: rule.rule_name.trim(),
+              price_override: rule.price_override,
+              day_of_week: Array.isArray(rule.day_of_week) && rule.day_of_week.length > 0
+                ? rule.day_of_week.map((day: number) => Number(day)).filter((day: number) => Number.isFinite(day))
+                : null,
+              start_time: rule.start_time.length === 5 ? `${rule.start_time}:00` : rule.start_time,
+              end_time: rule.end_time.length === 5 ? `${rule.end_time}:00` : rule.end_time,
+            }));
+        }
+      } catch (pricingParseError) {
+        console.error('Failed to parse pricing rules payload:', pricingParseError);
+        throw new Error('Invalid pricing rules format');
+      }
+    }
+
     // Upload service images
     const imageFiles: File[] = [];
     for (const [key, value] of formData.entries()) {
@@ -279,6 +318,31 @@ Deno.serve(async (req) => {
       console.log('Schedules created:', schedulesToInsert.length);
     } else {
       console.log('No open days - skipping schedule creation');
+    }
+
+    // 5. Insert pricing rules for the resource before generating slots
+    if (pricingRules.length > 0) {
+      const pricingRulesToInsert = pricingRules.map((rule) => ({
+        resource_id: resource.id,
+        rule_name: rule.rule_name,
+        price_override: rule.price_override,
+        day_of_week: rule.day_of_week && rule.day_of_week.length > 0 ? rule.day_of_week : null,
+        start_time: rule.start_time,
+        end_time: rule.end_time,
+      }));
+
+      const { error: pricingRulesError } = await supabase
+        .from('resource_pricing_rules')
+        .insert(pricingRulesToInsert);
+
+      if (pricingRulesError) {
+        console.error('Pricing rules creation error:', pricingRulesError);
+        throw pricingRulesError;
+      }
+
+      console.log('Pricing rules inserted:', pricingRulesToInsert.length);
+    } else {
+      console.log('No pricing rules provided - skipping pricing rule insertion');
     }
 
     // 6. Create payment_methods records
