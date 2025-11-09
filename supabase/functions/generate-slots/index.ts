@@ -77,14 +77,20 @@ Deno.serve(async (req) => {
     // Helper function to check if a time falls within a pricing rule
     const getPriceForSlot = (slotStart: Date, dayOfWeek: number): number => {
       if (!pricingRules || pricingRules.length === 0) {
+        console.log(`No pricing rules found, using base price: ${resource.base_price}`);
         return resource.base_price || 0;
       }
 
-      // Extract UTC time in HH:MM:SS format
-      const hours = slotStart.getUTCHours().toString().padStart(2, '0');
-      const minutes = slotStart.getUTCMinutes().toString().padStart(2, '0');
-      const seconds = slotStart.getUTCSeconds().toString().padStart(2, '0');
+      // Convert UTC time to Myanmar time (UTC+6:30)
+      const myanmarOffset = 6.5 * 60; // 6.5 hours in minutes
+      const myanmarTime = new Date(slotStart.getTime() + myanmarOffset * 60 * 1000);
+      
+      const hours = myanmarTime.getUTCHours().toString().padStart(2, '0');
+      const minutes = myanmarTime.getUTCMinutes().toString().padStart(2, '0');
+      const seconds = myanmarTime.getUTCSeconds().toString().padStart(2, '0');
       const slotTime = `${hours}:${minutes}:${seconds}`;
+
+      console.log(`Slot UTC time: ${slotStart.toISOString()}, Myanmar time: ${slotTime}, day: ${dayOfWeek}`);
 
       for (const rule of pricingRules) {
         console.log(`Checking rule "${rule.rule_name}": slotTime=${slotTime}, dayOfWeek=${dayOfWeek}, ruleDays=${JSON.stringify(rule.day_of_week)}, start=${rule.start_time}, end=${rule.end_time}`);
@@ -92,19 +98,20 @@ Deno.serve(async (req) => {
         // Check if rule applies to this day (day_of_week stored as strings in array)
         const ruleDays = rule.day_of_week || [];
         if (ruleDays.length > 0 && !ruleDays.includes(dayOfWeek.toString())) {
-          console.log(`  -> Day ${dayOfWeek} not in ruleDays`);
+          console.log(`  -> Day ${dayOfWeek} not in ruleDays, skipping`);
           continue;
         }
 
         // Check if slot time falls within rule's time range
         if (slotTime >= rule.start_time && slotTime < rule.end_time) {
-          console.log(`Applying rule "${rule.rule_name}" for ${slotTime}: ${rule.price_override}`);
+          console.log(`✓ APPLYING rule "${rule.rule_name}" - Price: ${rule.price_override} (was ${resource.base_price})`);
           return rule.price_override;
         } else {
           console.log(`  -> Time ${slotTime} not in range [${rule.start_time}, ${rule.end_time})`);
         }
       }
 
+      console.log(`No matching rule found, using base price: ${resource.base_price}`);
       return resource.base_price || 0;
     };
 
