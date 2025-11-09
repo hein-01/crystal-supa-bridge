@@ -1,10 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
-import { format, startOfDay, endOfDay } from "date-fns";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { fetchWeeklySchedule, fetchDailySlots } from "@/lib/bookingData";
+import {
+  fetchWeeklySchedule,
+  fetchAllSlotsForBusiness,
+  fetchResources,
+  type SlotWithResource,
+  type ResourceLite,
+} from "@/lib/bookingData";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,10 +22,12 @@ const currency = new Intl.NumberFormat(undefined, { style: "currency", currency:
 // Types from generated supabase types
 type Resource = Pick<Tables<"business_resources">, "id" | "name" | "business_id">;
 
-type SlotRow = Pick<
-  Tables<"slots">,
-  "id" | "start_time" | "end_time" | "is_booked" | "slot_price" | "resource_id"
->;
+type SlotMatrixRow = {
+  start_time: string;
+  end_time: string;
+  price: number | null;
+  slotsByResource: Record<string, SlotWithResource | undefined>;
+};
 
 export type ServiceAvailabilityProps = {
   initialResourceId?: string; // also read from URL ?resourceId=
@@ -64,13 +72,13 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
     props.initialResourceId || urlResourceId
   );
 
-  const [resources, setResources] = useState<Array<Pick<Resource, "id" | "name">>>([]);
+  const [resources, setResources] = useState<ResourceLite[]>([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string | undefined>(
     props.initialResourceId || urlResourceId
   );
-  const [selectedResourceName, setSelectedResourceName] = useState<string>("");
   const [loadingResources, setLoadingResources] = useState(false);
-  const [slots, setSlots] = useState<SlotRow[]>([]);
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [slots, setSlots] = useState<SlotWithResource[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,6 +91,32 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
       .filter((s) => selected.has(s.id))
       .reduce((sum, s) => sum + (s.slot_price || 0), 0);
   }, [selectedSlotIds, slots]);
+
+  const slotMatrix = useMemo<SlotMatrixRow[]>(() => {
+    const grouped = new Map<string, SlotMatrixRow>();
+
+    for (const slot of slots) {
+      const key = `${slot.start_time}|${slot.end_time}`;
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          price: slot.slot_price ?? null,
+          slotsByResource: {},
+        });
+      }
+
+      const entry = grouped.get(key)!;
+      entry.slotsByResource[slot.resource_id] = slot;
+      if (entry.price === null || entry.price === undefined) {
+        entry.price = slot.slot_price ?? null;
+      }
+    }
+
+    return Array.from(grouped.values()).sort((a, b) =>
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    );
+  }, [slots]);
 
   // Step 1: fetch initial resource to learn business_id, then all sibling resources
   useEffect(() => {
@@ -99,16 +133,10 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
         if (rerr) throw rerr;
         if (!initialRes) throw new Error("Resource not found");
 
-        // Remember name for table column
-        setSelectedResourceName(initialRes.name);
+        setBusinessId((initialRes as Resource).business_id);
 
-        const { data: siblings, error: serr } = await supabase
-          .from("business_resources")
-          .select("id,name")
-          .eq("business_id", (initialRes as Resource).business_id)
-          .order("name", { ascending: true });
-        if (serr) throw serr;
-        setResources(siblings || []);
+        const siblings = await fetchResources((initialRes as Resource).business_id);
+        setResources(siblings);
 
         // Ensure selectedResourceId is valid
         setSelectedResourceId((prev) => prev || initialRes.id);
@@ -125,18 +153,14 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
   // Step 2: load slots when resource/date changes — use shared helper
   useEffect(() => {
     async function loadSlots() {
-      if (!selectedResourceId || !selectedDate || loadingResources) return;
+      if (!businessId || !selectedDate || loadingResources) return;
       setLoadingSlots(true);
       setError(null);
       setSelectedSlotIds(new Set()); // reset selections when date/resource changes
       try {
         const dateStr = toISODateOnly(selectedDate);
-        const data = await fetchDailySlots(selectedResourceId, dateStr);
+        const data = await fetchAllSlotsForBusiness(businessId, dateStr);
         setSlots(data || []);
-
-        // Also update selected resource name for the table column
-        const r = resources.find((x) => x.id === selectedResourceId);
-        if (r) setSelectedResourceName(r.name);
       } catch (e) {
         const message = e instanceof Error ? e.message : "Failed to load slots";
         setError(message);
@@ -145,7 +169,7 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
       }
     }
     loadSlots();
-  }, [selectedResourceId, selectedDate, resources, loadingResources]);
+  }, [businessId, selectedDate, loadingResources]);
 
   // Step 3: load weekly schedule to disable closed days on the calendar
   useEffect(() => {
@@ -168,7 +192,7 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
     loadWeekly();
   }, [selectedResourceId]);
 
-  function toggleSelect(slot: SlotRow) {
+  function toggleSelect(slot: SlotWithResource) {
     if (slot.is_booked) return; // can't select booked slot
     setSelectedSlotIds((prev) => {
       const next = new Set(prev);
@@ -245,13 +269,20 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
                   <tr className="bg-primary/10 text-foreground border-b border-primary/20">
                     <th className="text-left px-4 py-3 font-semibold">Time</th>
                     <th className="text-left px-4 py-3 font-semibold">Price</th>
-                    <th className="text-left px-4 py-3 font-semibold">{selectedResourceName || "Resource"}</th>
+                    {resources.map((resource) => (
+                      <th key={resource.id} className="text-left px-4 py-3 font-semibold">
+                        {resource.name}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loadingSlots && (
                     <tr>
-                      <td className="px-4 py-8 text-center text-muted-foreground" colSpan={3}>
+                      <td
+                        className="px-4 py-8 text-center text-muted-foreground"
+                        colSpan={2 + resources.length}
+                      >
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
                           <span>Loading schedule…</span>
@@ -261,39 +292,76 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
                   )}
                   {!loadingSlots && slots.length === 0 && (
                     <tr>
-                      <td className="px-4 py-8 text-center text-muted-foreground" colSpan={3}>
+                      <td
+                        className="px-4 py-8 text-center text-muted-foreground"
+                        colSpan={2 + resources.length}
+                      >
                         No slots found for {toISODateOnly(selectedDate)}
                       </td>
                     </tr>
                   )}
-                  {!loadingSlots && slots.map((slot, idx) => {
-                    const isSelected = selectedSlotIds.has(slot.id);
-                    const icon = slot.is_booked ? (
-                      <XCircle className="h-5 w-5 text-destructive" />
-                    ) : (
-                      <CheckCircle2 className={`h-5 w-5 transition-colors ${isSelected ? "text-primary" : "text-green-500"}`} />
-                    );
-                    return (
-                      <tr
-                        key={slot.id}
-                        className={`
-                          ${idx % 2 ? "bg-background" : "bg-muted/20"} 
-                          ${!slot.is_booked ? "cursor-pointer hover:bg-primary/5 transition-colors" : "opacity-60"} 
-                          ${isSelected ? "ring-2 ring-primary ring-inset bg-primary/10" : ""}
-                        `}
-                        onClick={() => toggleSelect(slot)}
-                      >
-                        <td className="px-4 py-4 font-medium">{formatTimeRange(slot.start_time, slot.end_time)}</td>
-                        <td className="px-4 py-4 font-semibold text-primary">{currency.format(slot.slot_price)}</td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            {icon}
-                            <span>{selectedResourceName || "Resource"}</span>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {!loadingSlots &&
+                    slotMatrix.map((row, idx) => {
+                      const rowPrice = row.price;
+                      return (
+                        <tr
+                          key={`${row.start_time}-${row.end_time}`}
+                          className={idx % 2 ? "bg-background" : "bg-muted/20"}
+                        >
+                          <td className="px-4 py-4 font-medium">
+                            {formatTimeRange(row.start_time, row.end_time)}
+                          </td>
+                          <td className="px-4 py-4 font-semibold text-primary">
+                            {rowPrice !== null && rowPrice !== undefined
+                              ? currency.format(rowPrice)
+                              : "—"}
+                          </td>
+                          {resources.map((resource) => {
+                            const slot = row.slotsByResource[resource.id];
+                            if (!slot) {
+                              return (
+                                <td key={resource.id} className="px-4 py-4 text-muted-foreground">
+                                  —
+                                </td>
+                              );
+                            }
+
+                            const isSelected = selectedSlotIds.has(slot.id);
+                            const isBooked = slot.is_booked;
+
+                            const icon = isBooked ? (
+                              <XCircle className="h-5 w-5 text-destructive" />
+                            ) : (
+                              <CheckCircle2
+                                className={`h-5 w-5 transition-colors ${
+                                  isSelected ? "text-primary" : "text-green-500"
+                                }`}
+                              />
+                            );
+
+                            return (
+                              <td key={resource.id} className="px-4 py-4">
+                                <div
+                                  className={`flex items-center gap-2 rounded-lg p-2 transition-colors ${
+                                    isBooked
+                                      ? "opacity-60 cursor-not-allowed"
+                                      : "cursor-pointer hover:bg-primary/10"
+                                  } ${
+                                    isSelected ? "ring-2 ring-primary ring-inset bg-primary/10" : ""
+                                  }`}
+                                  onClick={() => {
+                                    if (!isBooked) toggleSelect(slot);
+                                  }}
+                                >
+                                  {icon}
+                                  <span className="sr-only">{resource.name}</span>
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
