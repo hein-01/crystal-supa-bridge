@@ -95,10 +95,14 @@ Deno.serve(async (req) => {
       for (const rule of pricingRules) {
         console.log(`Checking rule "${rule.rule_name}": slotTime=${slotTime}, dayOfWeek=${dayOfWeek}, ruleDays=${JSON.stringify(rule.day_of_week)}, start=${rule.start_time}, end=${rule.end_time}`);
         
-        // Check if rule applies to this day (day_of_week stored as strings in array)
-        const ruleDays = rule.day_of_week || [];
-        if (ruleDays.length > 0 && !ruleDays.includes(dayOfWeek.toString())) {
-          console.log(`  -> Day ${dayOfWeek} not in ruleDays, skipping`);
+        const ruleDaysRaw = rule.day_of_week || [];
+        const normalizedRuleDays = ruleDaysRaw.map((d: any) => {
+          const n = parseInt(d as string, 10);
+          if (isNaN(n)) return d;
+          return (n === 0 ? 7 : n).toString();
+        });
+        if (normalizedRuleDays.length > 0 && !normalizedRuleDays.includes(dayOfWeek.toString())) {
+          console.log(`  -> Day ${dayOfWeek} not in ruleDays (${JSON.stringify(normalizedRuleDays)}), skipping`);
           continue;
         }
 
@@ -127,7 +131,9 @@ Deno.serve(async (req) => {
     const slotsToInsert = [];
 
     for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-      const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert Sunday from 0 to 7
+      // Day of week based on the calendar date (Monday=1..Sunday=7)
+      const jsDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())).getUTCDay();
+      const dayOfWeek = jsDay === 0 ? 7 : jsDay;
       const schedule = scheduleMap.get(dayOfWeek);
 
       console.log(`Processing ${date.toISOString().split('T')[0]}, day_of_week: ${dayOfWeek}`);
@@ -142,12 +148,18 @@ Deno.serve(async (req) => {
       const [openHour, openMin] = schedule.open_time.split(':').map(Number);
       const [closeHour, closeMin] = schedule.close_time.split(':').map(Number);
 
-      // Generate slots for this day
-      let currentTime = new Date(date);
-      currentTime.setHours(openHour, openMin, 0, 0);
-
-      const closeTime = new Date(date);
-      closeTime.setHours(closeHour, closeMin, 0, 0);
+      // Generate slots for this day (interpret schedule times in Myanmar local time)
+      const myanmarOffsetMs = 6.5 * 60 * 60 * 1000; // UTC+6:30
+      const y = date.getUTCFullYear();
+      const m = date.getUTCMonth();
+      const d = date.getUTCDate();
+      // Build UTC instants that correspond to the local Myanmar schedule times
+      let currentTime = new Date(Date.UTC(y, m, d, openHour, openMin, 0) - myanmarOffsetMs);
+      let closeTime = new Date(Date.UTC(y, m, d, closeHour, closeMin, 0) - myanmarOffsetMs);
+      // If close time is past midnight, push to next day
+      if (closeTime <= currentTime) {
+        closeTime = new Date(Date.UTC(y, m, d + 1, closeHour, closeMin, 0) - myanmarOffsetMs);
+      }
 
       console.log(`Generating slots from ${currentTime.toISOString()} to ${closeTime.toISOString()}`);
 
@@ -183,7 +195,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 5. Insert slots into database
+    // 5. Regenerate: delete existing slots in the date range for this resource, then insert new ones
+    const myanmarOffsetMs = 6.5 * 60 * 60 * 1000; // UTC+6:30
+    const startRangeUTC = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0) - myanmarOffsetMs);
+    const endRangeUTCExclusive = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() + 1, 0, 0, 0) - myanmarOffsetMs);
+
+    console.log(`Deleting existing slots for resource ${resourceId} between ${startRangeUTC.toISOString()} and ${endRangeUTCExclusive.toISOString()}`);
+    const { error: deleteError, count: deleteCount } = await supabase
+      .from('slots')
+      .delete({ count: 'exact' })
+      .eq('resource_id', resourceId)
+      .gte('start_time', startRangeUTC.toISOString())
+      .lt('start_time', endRangeUTCExclusive.toISOString());
+
+    if (deleteError) {
+      console.error('Delete existing slots error:', deleteError);
+    } else {
+      console.log(`Deleted ${deleteCount || 0} existing slots`);
+    }
+
     const { data: insertedSlots, error: insertError } = await supabase
       .from('slots')
       .insert(slotsToInsert)

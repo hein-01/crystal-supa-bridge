@@ -1,4 +1,3 @@
-import { startOfDay, endOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -28,16 +27,17 @@ export async function fetchDailySlots(
   resourceId: string,
   dateString: string
 ): Promise<SlotLite[]> {
-  const day = new Date(dateString);
-  const start = startOfDay(day);
-  const end = endOfDay(day);
+  const [year, month, dayNum] = dateString.split('-').map(Number);
+  const myanmarOffsetMs = 6.5 * 60 * 60 * 1000; // UTC+6:30
+  const startUTC = new Date(Date.UTC(year, (month - 1), dayNum, 0, 0, 0) - myanmarOffsetMs);
+  const endUTC = new Date(Date.UTC(year, (month - 1), dayNum + 1, 0, 0, 0) - myanmarOffsetMs);
 
   const { data, error } = await supabase
     .from("slots")
     .select("id, start_time, end_time, slot_price, is_booked, resource_id")
     .eq("resource_id", resourceId)
-    .gte("start_time", start.toISOString())
-    .lt("start_time", end.toISOString())
+    .gte("start_time", startUTC.toISOString())
+    .lt("start_time", endUTC.toISOString())
     .order("start_time", { ascending: true });
   if (error) throw error;
   return data || [];
