@@ -374,6 +374,18 @@ export const FutsalCourtForm = () => {
         formData.append('receiptFile', receiptFile);
       }
 
+      const pricingRulesPayload = pricingRules
+        .filter((rule) => rule.rule_name && rule.price_override && rule.start_time && rule.end_time)
+        .map((rule) => ({
+          rule_name: rule.rule_name,
+          price_override: parseFloat(rule.price_override),
+          day_of_week: rule.day_of_week.length ? rule.day_of_week : null,
+          start_time: rule.start_time.length === 5 ? `${rule.start_time}:00` : rule.start_time,
+          end_time: rule.end_time.length === 5 ? `${rule.end_time}:00` : rule.end_time,
+        }));
+
+      formData.append("pricingRules", JSON.stringify(pricingRulesPayload));
+
       // Submit to edge function
       const response = await fetch(
         `https://mfclqtbudstlthtnhqpj.supabase.co/functions/v1/submit-futsal-listing`,
@@ -386,37 +398,10 @@ export const FutsalCourtForm = () => {
         }
       );
 
-  const result = await response.json();
+      const result = await response.json();
 
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Failed to create listing');
-      }
-      
-      // Insert dynamic pricing rules if provided
-      try {
-        if (result?.resource_id && pricingRules.length > 0) {
-          const rows = pricingRules
-            .filter(r => r.rule_name && r.price_override && r.start_time && r.end_time)
-            .map(r => ({
-              resource_id: result.resource_id as string,
-              rule_name: r.rule_name,
-              day_of_week: r.day_of_week.length ? r.day_of_week : null,
-              start_time: r.start_time.length === 5 ? `${r.start_time}:00` : r.start_time,
-              end_time: r.end_time.length === 5 ? `${r.end_time}:00` : r.end_time,
-              price_override: parseFloat(r.price_override),
-            }));
-          if (rows.length > 0) {
-            const { error: rulesError } = await (supabase as any)
-              .from('resource_pricing_rules')
-              .insert(rows);
-            if (rulesError) {
-              console.error('Error inserting pricing rules:', rulesError);
-              toast({ title: 'Warning', description: 'Listing created, but some pricing rules could not be saved.', variant: 'destructive' });
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Dynamic pricing rules save error:', err);
       }
 
       toast({
@@ -428,8 +413,8 @@ export const FutsalCourtForm = () => {
       form.reset();
       setImages([]);
       setImagePreview([]);
-  setReceiptFile(null);
-  setPricingRules([]);
+      setReceiptFile(null);
+      setPricingRules([]);
 
     } catch (error) {
       console.error('Submission error:', error);
