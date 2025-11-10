@@ -353,9 +353,7 @@ Deno.serve(async (req) => {
 
       if (pricingRulesError) {
         console.error('Pricing rules creation error:', pricingRulesError);
-        throw new Error(
-          pricingRulesError.message || 'Failed to persist pricing rules'
-        );
+
       }
 
       console.log('Pricing rules inserted:', pricingRulesToInsert.length);
