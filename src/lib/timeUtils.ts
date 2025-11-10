@@ -4,8 +4,9 @@
 export function convertTo24HourFormat(time12h: string): string {
   if (!time12h) return '';
   
-  const timeUpper = time12h.trim().toUpperCase();
-  const match = timeUpper.match(/^(\d+)\s*(AM|PM)$/);
+  // Remove any text in parentheses (like "12 PM (Noon)")
+  const cleanTime = time12h.replace(/\s*\([^)]*\)/g, '').trim().toUpperCase();
+  const match = cleanTime.match(/^(\d+)\s*(AM|PM)$/);
   
   if (!match) {
     // If already in HH:MM or HH:MM:SS format, return as is
