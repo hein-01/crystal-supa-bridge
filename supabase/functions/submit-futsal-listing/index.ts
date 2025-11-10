@@ -11,10 +11,15 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  let createdBusinessId: string | null = null;
+  let createdServiceId: number | null = null;
+  let createdResourceId: string | null = null;
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get the authorization header
     const authHeader = req.headers.get('authorization');
@@ -135,7 +140,7 @@ Deno.serve(async (req) => {
 
       if (uploadError) {
         console.error('Image upload error:', uploadError);
-        throw uploadError;
+        throw new Error(uploadError.message || 'Failed to upload service image');
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -151,7 +156,7 @@ Deno.serve(async (req) => {
     if (receiptFile) {
       const fileExt = receiptFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}_receipt.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('business-assets')
         .upload(`receipts/${fileName}`, receiptFile, {
@@ -161,7 +166,7 @@ Deno.serve(async (req) => {
 
       if (uploadError) {
         console.error('Receipt upload error:', uploadError);
-        throw uploadError;
+        throw new Error(uploadError.message || 'Failed to upload payment receipt');
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -213,10 +218,13 @@ Deno.serve(async (req) => {
 
     if (businessError) {
       console.error('Business creation error:', businessError);
-      throw businessError;
+      throw new Error(
+        businessError.message || 'Failed to create business record'
+      );
     }
 
     console.log('Business created:', business.id);
+    createdBusinessId = business.id;
 
     // 2. Create services record FIRST to get the service_id
     // Generate unique service_key using business_id
@@ -244,10 +252,13 @@ Deno.serve(async (req) => {
 
     if (serviceError) {
       console.error('Service creation error:', serviceError);
-      throw serviceError;
+      throw new Error(
+        serviceError.message || 'Failed to create service record'
+      );
     }
 
     console.log('Service created:', service.id);
+    createdServiceId = service.id;
 
     // Calculate base price (minimum of all slot prices)
     const prices = fieldDetails.map((f: any) => {
@@ -281,10 +292,13 @@ Deno.serve(async (req) => {
 
     if (resourceError) {
       console.error('Resource creation error:', resourceError);
-      throw resourceError;
+      throw new Error(
+        resourceError.message || 'Failed to create primary resource record'
+      );
     }
 
     console.log('Resource created:', resource.id);
+    createdResourceId = resource.id;
 
     // 4. Create business_schedules for each day (only insert open days)
     const schedulesToInsert = operatingHours
@@ -312,7 +326,9 @@ Deno.serve(async (req) => {
 
       if (schedulesError) {
         console.error('Schedules creation error:', schedulesError);
-        throw schedulesError;
+        throw new Error(
+          schedulesError.message || 'Failed to create operating schedules'
+        );
       }
 
       console.log('Schedules created:', schedulesToInsert.length);
@@ -337,7 +353,7 @@ Deno.serve(async (req) => {
 
       if (pricingRulesError) {
         console.error('Pricing rules creation error:', pricingRulesError);
-        throw pricingRulesError;
+
       }
 
       console.log('Pricing rules inserted:', pricingRulesToInsert.length);
@@ -357,15 +373,6 @@ Deno.serve(async (req) => {
       });
     }
     
-    if (paymentMethodsData.wechat) {
-      paymentMethodsToInsert.push({
-        business_id: business.id,
-        method_type: 'WeChat Pay',
-        account_name: paymentMethodsData.wechatName,
-        account_number: paymentMethodsData.wechatPhone,
-      });
-    }
-    
     if (paymentMethodsData.kpay) {
       paymentMethodsToInsert.push({
         business_id: business.id,
@@ -374,13 +381,31 @@ Deno.serve(async (req) => {
         account_number: paymentMethodsData.kpayPhone,
       });
     }
-    
+
     if (paymentMethodsData.paylah) {
       paymentMethodsToInsert.push({
         business_id: business.id,
         method_type: 'PayLah!',
         account_name: paymentMethodsData.paylahName,
         account_number: paymentMethodsData.paylahPhone,
+      });
+    }
+
+    if (paymentMethodsData.truemoney) {
+      paymentMethodsToInsert.push({
+        business_id: business.id,
+        method_type: 'True Money',
+        account_name: paymentMethodsData.truemoneyName,
+        account_number: paymentMethodsData.truemoneyPhone,
+      });
+    }
+
+    if (paymentMethodsData.grabpay) {
+      paymentMethodsToInsert.push({
+        business_id: business.id,
+        method_type: 'GrabPay',
+        account_name: paymentMethodsData.grabpayName,
+        account_number: paymentMethodsData.grabpayPhone,
       });
     }
 
@@ -391,7 +416,9 @@ Deno.serve(async (req) => {
 
       if (paymentError) {
         console.error('Payment methods creation error:', paymentError);
-        throw paymentError;
+        throw new Error(
+          paymentError.message || 'Failed to create payment methods'
+        );
       }
 
       console.log('Payment methods created:', paymentMethodsToInsert.length);
@@ -437,10 +464,57 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing futsal listing:', error);
+
+    // Best-effort cleanup to avoid leaving partial data behind
+    try {
+      if (createdResourceId) {
+        const { error: resourceCleanupError } = await supabase
+          .from('business_resources')
+          .delete()
+          .eq('id', createdResourceId);
+        if (resourceCleanupError) {
+          console.error('Failed to cleanup business_resource:', resourceCleanupError);
+        }
+      }
+
+      if (createdServiceId !== null) {
+        const { error: serviceCleanupError } = await supabase
+          .from('services')
+          .delete()
+          .eq('id', createdServiceId);
+        if (serviceCleanupError) {
+          console.error('Failed to cleanup service:', serviceCleanupError);
+        }
+      }
+
+      if (createdBusinessId) {
+        const { error: businessCleanupError } = await supabase
+          .from('businesses')
+          .delete()
+          .eq('id', createdBusinessId);
+        if (businessCleanupError) {
+          console.error('Failed to cleanup business:', businessCleanupError);
+        }
+      }
+    } catch (cleanupError) {
+      console.error('Cleanup routine encountered an error:', cleanupError);
+    }
+
+    const message = error instanceof Error
+      ? error.message
+      : (typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as { message?: string }).message)
+        : 'Unknown error occurred');
+
+    const details = typeof error === 'object' && error !== null && 'details' in error
+      ? (error as { details?: string }).details
+      : undefined;
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: message,
+        details,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
