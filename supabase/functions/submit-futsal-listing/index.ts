@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
   let createdBusinessId: string | null = null;
   let createdServiceId: number | null = null;
   let createdResourceId: string | null = null;
+  const createdResourceIds: string[] = [];
 
   try {
 
@@ -260,69 +261,80 @@ Deno.serve(async (req) => {
     console.log('Service created:', service.id);
     createdServiceId = service.id;
 
-    // Calculate base price (minimum of all slot prices)
-    const prices = fieldDetails.map((f: any) => {
-      const price = parseFloat(f.price);
-      if (isNaN(price) || !isFinite(price)) {
-        throw new Error(`Invalid price value: ${f.price}`);
-      }
-      return price;
-    });
-    
-    if (prices.length === 0) {
+    // 3. Create business_resources records - one for each field/pitch
+    if (!fieldDetails || fieldDetails.length === 0) {
       throw new Error('No field details provided');
     }
+
+    const createdResources: Array<{ id: string; name: string; base_price: number }> = [];
     
-    const basePrice = Math.min(...prices);
-    console.log('Calculated base price:', basePrice);
+    for (const field of fieldDetails) {
+      const fieldPrice = parseFloat(field.price);
+      if (isNaN(fieldPrice) || !isFinite(fieldPrice)) {
+        throw new Error(`Invalid price value for ${field.name}: ${field.price}`);
+      }
 
-    // 3. Create business_resources record using the service_id from step 2
-    const { data: resource, error: resourceError } = await supabase
-      .from('business_resources')
-      .insert({
-        business_id: business.id,
-        name: businessName,
-        service_id: service.id,
-        max_capacity: maxCapacity,
-        base_price: basePrice,
-        field_type: fieldType,
-      })
-      .select()
-      .single();
+      const { data: resource, error: resourceError } = await supabase
+        .from('business_resources')
+        .insert({
+          business_id: business.id,
+          name: field.name,
+          service_id: service.id,
+          max_capacity: maxCapacity,
+          base_price: fieldPrice,
+          field_type: fieldType,
+        })
+        .select()
+        .single();
 
-    if (resourceError) {
-      console.error('Resource creation error:', resourceError);
-      throw new Error(
-        resourceError.message || 'Failed to create primary resource record'
-      );
+      if (resourceError) {
+        console.error(`Resource creation error for ${field.name}:`, resourceError);
+        throw new Error(
+          resourceError.message || `Failed to create resource: ${field.name}`
+        );
+      }
+
+      console.log(`Resource created: ${resource.id} - ${field.name} - $${fieldPrice}`);
+      createdResources.push({
+        id: resource.id,
+        name: field.name,
+        base_price: fieldPrice,
+      });
+      createdResourceIds.push(resource.id);
     }
 
-    console.log('Resource created:', resource.id);
-    createdResourceId = resource.id;
+    // Store the first resource ID for backwards compatibility
+    createdResourceId = createdResources[0].id;
 
-    // 4. Create business_schedules for each day (only insert open days)
-    const schedulesToInsert = operatingHours
-      .map((hour: any, index: number) => {
-        // Skip closed days - don't insert records for them
-        if (hour.closed) {
-          return null;
-        }
-        
-        return {
-          resource_id: resource.id,
-          day_of_week: index + 1, // 1 = Monday, 7 = Sunday
-          is_open: true,
-          open_time: hour.openTime,
-          close_time: hour.closeTime,
-        };
-      })
-      .filter((schedule: any) => schedule !== null); // Remove null entries for closed days
+    // 4. Create business_schedules for each resource and each day (only insert open days)
+    const allSchedulesToInsert = [];
+    
+    for (const resource of createdResources) {
+      const schedulesForResource = operatingHours
+        .map((hour: any, index: number) => {
+          // Skip closed days - don't insert records for them
+          if (hour.closed) {
+            return null;
+          }
+          
+          return {
+            resource_id: resource.id,
+            day_of_week: index + 1, // 1 = Monday, 7 = Sunday
+            is_open: true,
+            open_time: hour.openTime,
+            close_time: hour.closeTime,
+          };
+        })
+        .filter((schedule: any) => schedule !== null); // Remove null entries for closed days
+      
+      allSchedulesToInsert.push(...schedulesForResource);
+    }
 
     // Only insert if there are open days
-    if (schedulesToInsert.length > 0) {
+    if (allSchedulesToInsert.length > 0) {
       const { error: schedulesError } = await supabase
         .from('business_schedules')
-        .insert(schedulesToInsert);
+        .insert(allSchedulesToInsert);
 
       if (schedulesError) {
         console.error('Schedules creation error:', schedulesError);
@@ -331,32 +343,37 @@ Deno.serve(async (req) => {
         );
       }
 
-      console.log('Schedules created:', schedulesToInsert.length);
+      console.log('Schedules created for all resources:', allSchedulesToInsert.length);
     } else {
       console.log('No open days - skipping schedule creation');
     }
 
-    // 5. Insert pricing rules for the resource before generating slots
+    // 5. Insert pricing rules for all resources before generating slots
     if (pricingRules.length > 0) {
-      const pricingRulesToInsert = pricingRules.map((rule) => ({
-        resource_id: resource.id,
-        rule_name: rule.rule_name,
-        price_override: rule.price_override,
-        day_of_week: rule.day_of_week && rule.day_of_week.length > 0 ? rule.day_of_week : null,
-        start_time: rule.start_time,
-        end_time: rule.end_time,
-      }));
+      const allPricingRulesToInsert = [];
+      
+      for (const resource of createdResources) {
+        const rulesForResource = pricingRules.map((rule) => ({
+          resource_id: resource.id,
+          rule_name: rule.rule_name,
+          price_override: rule.price_override,
+          day_of_week: rule.day_of_week && rule.day_of_week.length > 0 ? rule.day_of_week : null,
+          start_time: rule.start_time,
+          end_time: rule.end_time,
+        }));
+        
+        allPricingRulesToInsert.push(...rulesForResource);
+      }
 
       const { error: pricingRulesError } = await supabase
         .from('resource_pricing_rules')
-        .insert(pricingRulesToInsert);
+        .insert(allPricingRulesToInsert);
 
       if (pricingRulesError) {
         console.error('Pricing rules creation error:', pricingRulesError);
-
+      } else {
+        console.log('Pricing rules inserted for all resources:', allPricingRulesToInsert.length);
       }
-
-      console.log('Pricing rules inserted:', pricingRulesToInsert.length);
     } else {
       console.log('No pricing rules provided - skipping pricing rule insertion');
     }
@@ -424,28 +441,32 @@ Deno.serve(async (req) => {
       console.log('Payment methods created:', paymentMethodsToInsert.length);
     }
 
-    // 7. Generate time slots automatically for the next 30 days
-    if (schedulesToInsert.length > 0) {
-      console.log('Generating time slots for the next 30 days...');
+    // 7. Generate time slots automatically for all resources for the next 30 days
+    if (allSchedulesToInsert.length > 0) {
+      console.log('Generating time slots for all resources for the next 30 days...');
       
       const startDate = new Date();
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
       
-      const { data: slotsResult, error: slotsGenError } = await supabase.functions.invoke('generate-slots', {
-        body: {
-          resourceId: resource.id,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
-          slotDurationMinutes: 60,
-        }
-      });
+      for (const resource of createdResources) {
+        console.log(`Generating slots for resource: ${resource.name} (${resource.id})`);
+        
+        const { data: slotsResult, error: slotsGenError } = await supabase.functions.invoke('generate-slots', {
+          body: {
+            resourceId: resource.id,
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            slotDurationMinutes: 60,
+          }
+        });
 
-      if (slotsGenError) {
-        console.error('Slot generation warning:', slotsGenError);
-        // Don't throw - this is not critical for listing creation
-      } else {
-        console.log('Time slots generated successfully:', slotsResult);
+        if (slotsGenError) {
+          console.error(`Slot generation warning for ${resource.name}:`, slotsGenError);
+          // Don't throw - this is not critical for listing creation
+        } else {
+          console.log(`Time slots generated successfully for ${resource.name}:`, slotsResult);
+        }
       }
     }
 
@@ -453,8 +474,9 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         business_id: business.id,
-        resource_id: resource.id,
+        resource_ids: createdResources.map(r => r.id),
         service_id: service.id,
+        resources_created: createdResources.length,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -467,13 +489,13 @@ Deno.serve(async (req) => {
 
     // Best-effort cleanup to avoid leaving partial data behind
     try {
-      if (createdResourceId) {
+      if (createdResourceIds.length > 0) {
         const { error: resourceCleanupError } = await supabase
           .from('business_resources')
           .delete()
-          .eq('id', createdResourceId);
+          .in('id', createdResourceIds);
         if (resourceCleanupError) {
-          console.error('Failed to cleanup business_resource:', resourceCleanupError);
+          console.error('Failed to cleanup business_resources:', resourceCleanupError);
         }
       }
 
