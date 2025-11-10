@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
 
       if (uploadError) {
         console.error('Image upload error:', uploadError);
-        throw uploadError;
+        throw new Error(uploadError.message || 'Failed to upload service image');
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
     if (receiptFile) {
       const fileExt = receiptFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}_receipt.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('business-assets')
         .upload(`receipts/${fileName}`, receiptFile, {
@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
 
       if (uploadError) {
         console.error('Receipt upload error:', uploadError);
-        throw uploadError;
+        throw new Error(uploadError.message || 'Failed to upload payment receipt');
       }
 
       const { data: { publicUrl } } = supabase.storage
