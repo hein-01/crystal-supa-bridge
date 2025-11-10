@@ -11,10 +11,15 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  let createdBusinessId: string | null = null;
+  let createdServiceId: number | null = null;
+  let createdResourceId: string | null = null;
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get the authorization header
     const authHeader = req.headers.get('authorization');
@@ -72,6 +77,45 @@ Deno.serve(async (req) => {
     // Parse payment methods
     const paymentMethodsStr = formData.get('paymentMethods') as string;
     const paymentMethodsData = JSON.parse(paymentMethodsStr);
+
+    const pricingRulesStr = formData.get('pricingRules') as string | null;
+    let pricingRules: Array<{
+      rule_name: string;
+      price_override: number;
+      day_of_week: number[] | null;
+      start_time: string;
+      end_time: string;
+    }> = [];
+
+    if (pricingRulesStr) {
+      try {
+        const parsed = JSON.parse(pricingRulesStr);
+        if (Array.isArray(parsed)) {
+          pricingRules = parsed
+            .filter((rule) =>
+              rule &&
+              typeof rule.rule_name === 'string' &&
+              rule.rule_name.trim().length > 0 &&
+              typeof rule.price_override === 'number' &&
+              !Number.isNaN(rule.price_override) &&
+              typeof rule.start_time === 'string' &&
+              typeof rule.end_time === 'string'
+            )
+            .map((rule) => ({
+              rule_name: rule.rule_name.trim(),
+              price_override: rule.price_override,
+              day_of_week: Array.isArray(rule.day_of_week) && rule.day_of_week.length > 0
+                ? rule.day_of_week.map((day: number) => Number(day)).filter((day: number) => Number.isFinite(day))
+                : null,
+              start_time: rule.start_time.length === 5 ? `${rule.start_time}:00` : rule.start_time,
+              end_time: rule.end_time.length === 5 ? `${rule.end_time}:00` : rule.end_time,
+            }));
+        }
+      } catch (pricingParseError) {
+        console.error('Failed to parse pricing rules payload:', pricingParseError);
+        throw new Error('Invalid pricing rules format');
+      }
+    }
 
     // Upload service images
     const imageFiles: File[] = [];
@@ -174,10 +218,13 @@ Deno.serve(async (req) => {
 
     if (businessError) {
       console.error('Business creation error:', businessError);
-      throw businessError;
+      throw new Error(
+        businessError.message || 'Failed to create business record'
+      );
     }
 
     console.log('Business created:', business.id);
+    createdBusinessId = business.id;
 
     // 2. Create services record FIRST to get the service_id
     // Generate unique service_key using business_id
@@ -205,10 +252,13 @@ Deno.serve(async (req) => {
 
     if (serviceError) {
       console.error('Service creation error:', serviceError);
-      throw serviceError;
+      throw new Error(
+        serviceError.message || 'Failed to create service record'
+      );
     }
 
     console.log('Service created:', service.id);
+    createdServiceId = service.id;
 
     // Calculate base price (minimum of all slot prices)
     const prices = fieldDetails.map((f: any) => {
@@ -242,10 +292,13 @@ Deno.serve(async (req) => {
 
     if (resourceError) {
       console.error('Resource creation error:', resourceError);
-      throw resourceError;
+      throw new Error(
+        resourceError.message || 'Failed to create primary resource record'
+      );
     }
 
     console.log('Resource created:', resource.id);
+    createdResourceId = resource.id;
 
     // 4. Create business_schedules for each day (only insert open days)
     const schedulesToInsert = operatingHours
@@ -273,12 +326,41 @@ Deno.serve(async (req) => {
 
       if (schedulesError) {
         console.error('Schedules creation error:', schedulesError);
-        throw schedulesError;
+        throw new Error(
+          schedulesError.message || 'Failed to create operating schedules'
+        );
       }
 
       console.log('Schedules created:', schedulesToInsert.length);
     } else {
       console.log('No open days - skipping schedule creation');
+    }
+
+    // 5. Insert pricing rules for the resource before generating slots
+    if (pricingRules.length > 0) {
+      const pricingRulesToInsert = pricingRules.map((rule) => ({
+        resource_id: resource.id,
+        rule_name: rule.rule_name,
+        price_override: rule.price_override,
+        day_of_week: rule.day_of_week && rule.day_of_week.length > 0 ? rule.day_of_week : null,
+        start_time: rule.start_time,
+        end_time: rule.end_time,
+      }));
+
+      const { error: pricingRulesError } = await supabase
+        .from('resource_pricing_rules')
+        .insert(pricingRulesToInsert);
+
+      if (pricingRulesError) {
+        console.error('Pricing rules creation error:', pricingRulesError);
+        throw new Error(
+          pricingRulesError.message || 'Failed to persist pricing rules'
+        );
+      }
+
+      console.log('Pricing rules inserted:', pricingRulesToInsert.length);
+    } else {
+      console.log('No pricing rules provided - skipping pricing rule insertion');
     }
 
     // 6. Create payment_methods records
@@ -293,15 +375,6 @@ Deno.serve(async (req) => {
       });
     }
     
-    if (paymentMethodsData.wechat) {
-      paymentMethodsToInsert.push({
-        business_id: business.id,
-        method_type: 'WeChat Pay',
-        account_name: paymentMethodsData.wechatName,
-        account_number: paymentMethodsData.wechatPhone,
-      });
-    }
-    
     if (paymentMethodsData.kpay) {
       paymentMethodsToInsert.push({
         business_id: business.id,
@@ -310,13 +383,31 @@ Deno.serve(async (req) => {
         account_number: paymentMethodsData.kpayPhone,
       });
     }
-    
+
     if (paymentMethodsData.paylah) {
       paymentMethodsToInsert.push({
         business_id: business.id,
         method_type: 'PayLah!',
         account_name: paymentMethodsData.paylahName,
         account_number: paymentMethodsData.paylahPhone,
+      });
+    }
+
+    if (paymentMethodsData.truemoney) {
+      paymentMethodsToInsert.push({
+        business_id: business.id,
+        method_type: 'True Money',
+        account_name: paymentMethodsData.truemoneyName,
+        account_number: paymentMethodsData.truemoneyPhone,
+      });
+    }
+
+    if (paymentMethodsData.grabpay) {
+      paymentMethodsToInsert.push({
+        business_id: business.id,
+        method_type: 'GrabPay',
+        account_name: paymentMethodsData.grabpayName,
+        account_number: paymentMethodsData.grabpayPhone,
       });
     }
 
@@ -327,7 +418,9 @@ Deno.serve(async (req) => {
 
       if (paymentError) {
         console.error('Payment methods creation error:', paymentError);
-        throw paymentError;
+        throw new Error(
+          paymentError.message || 'Failed to create payment methods'
+        );
       }
 
       console.log('Payment methods created:', paymentMethodsToInsert.length);
@@ -373,10 +466,57 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing futsal listing:', error);
+
+    // Best-effort cleanup to avoid leaving partial data behind
+    try {
+      if (createdResourceId) {
+        const { error: resourceCleanupError } = await supabase
+          .from('business_resources')
+          .delete()
+          .eq('id', createdResourceId);
+        if (resourceCleanupError) {
+          console.error('Failed to cleanup business_resource:', resourceCleanupError);
+        }
+      }
+
+      if (createdServiceId !== null) {
+        const { error: serviceCleanupError } = await supabase
+          .from('services')
+          .delete()
+          .eq('id', createdServiceId);
+        if (serviceCleanupError) {
+          console.error('Failed to cleanup service:', serviceCleanupError);
+        }
+      }
+
+      if (createdBusinessId) {
+        const { error: businessCleanupError } = await supabase
+          .from('businesses')
+          .delete()
+          .eq('id', createdBusinessId);
+        if (businessCleanupError) {
+          console.error('Failed to cleanup business:', businessCleanupError);
+        }
+      }
+    } catch (cleanupError) {
+      console.error('Cleanup routine encountered an error:', cleanupError);
+    }
+
+    const message = error instanceof Error
+      ? error.message
+      : (typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as { message?: string }).message)
+        : 'Unknown error occurred');
+
+    const details = typeof error === 'object' && error !== null && 'details' in error
+      ? (error as { details?: string }).details
+      : undefined;
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: message,
+        details,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
