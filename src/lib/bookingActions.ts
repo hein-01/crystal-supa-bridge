@@ -75,9 +75,9 @@ export async function submitBooking(
     return { success: false, error: "Submitted amount does not match the slot price." };
   }
 
-  const uploadedReceipt = await uploadReceipt(slotId, userId, receiptFile);
-  if (!uploadedReceipt.success) {
-    return uploadedReceipt;
+  const uploadResult = await uploadReceipt(slotId, userId, receiptFile);
+  if (uploadResult.success === false) {
+    return { success: false, error: uploadResult.error };
   }
 
   const { data: bookingData, error: bookingError } = await supabase
@@ -85,9 +85,9 @@ export async function submitBooking(
     .insert({
       slot_id: slot.id,
       resource_id: slot.resource_id,
-      user_id,
+      user_id: userId,
       payment_amount: slot.slot_price,
-      receipt_url: uploadedReceipt.url,
+      receipt_url: uploadResult.url,
     })
     .select("id")
     .single();

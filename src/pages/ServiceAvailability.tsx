@@ -195,6 +195,61 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
     loadSlots();
   }, [businessId, selectedDate, loadingResources]);
 
+  // Step 2.5: Ensure slots exist for today + 30 days (regenerate if needed)
+  useEffect(() => {
+    async function ensureSlotsExist() {
+      if (!businessId || loadingResources) return;
+      
+      try {
+        // Check if we have slots for today
+        const today = new Date();
+        const todayStr = toISODateOnly(today);
+        const { data: todaySlots, error: checkError } = await supabase
+          .from("slots")
+          .select("id")
+          .gte("start_time", `${todayStr}T00:00:00.000Z`)
+          .lt("start_time", `${todayStr}T23:59:59.999Z`)
+          .limit(1);
+
+        if (checkError) {
+          console.error("Error checking slots:", checkError);
+          return;
+        }
+
+        // If no slots exist for today, regenerate for all resources
+        if (!todaySlots || todaySlots.length === 0) {
+          console.log("No slots found for today, regenerating...");
+          const endDate = new Date();
+          endDate.setDate(endDate.getDate() + 30);
+
+          for (const resource of resources) {
+            await supabase.functions.invoke("generate-slots", {
+              body: {
+                resourceId: resource.id,
+                startDate: todayStr,
+                endDate: toISODateOnly(endDate),
+                slotDurationMinutes: 60,
+              },
+            });
+          }
+
+          // Reload slots after regeneration
+          if (selectedDate) {
+            const dateStr = toISODateOnly(selectedDate);
+            const data = await fetchAllSlotsForBusiness(businessId, dateStr);
+            setSlots(data || []);
+          }
+        }
+      } catch (e) {
+        console.error("Error ensuring slots exist:", e);
+      }
+    }
+
+    if (resources.length > 0) {
+      ensureSlotsExist();
+    }
+  }, [businessId, resources, loadingResources, selectedDate]);
+
   // Step 3: load weekly schedule to disable closed days on the calendar
   useEffect(() => {
     async function loadWeekly() {
@@ -238,23 +293,24 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
     setLoadingPaymentMethods(true);
     setPaymentMethodsError(null);
 
-    supabase
-      .from("payment_methods")
-      .select("method_type, account_name, account_number")
-      .eq("business_id", businessId)
-      .then(({ data, error: paymentError }) => {
-        if (!isMounted) return;
-        if (paymentError) {
-          console.error("Failed to load payment methods", paymentError);
-          setPaymentMethods([]);
-          setPaymentMethodsError("Unable to load payment instructions for this service.");
-          return;
-        }
+    (async () => {
+      const { data, error: paymentError } = await supabase
+        .from("payment_methods")
+        .select("method_type, account_name, account_number")
+        .eq("business_id", businessId);
+
+      if (!isMounted) return;
+      
+      if (paymentError) {
+        console.error("Failed to load payment methods", paymentError);
+        setPaymentMethods([]);
+        setPaymentMethodsError("Unable to load payment instructions for this service.");
+      } else {
         setPaymentMethods(data || []);
-      })
-      .finally(() => {
-        if (isMounted) setLoadingPaymentMethods(false);
-      });
+      }
+      
+      setLoadingPaymentMethods(false);
+    })();
 
     return () => {
       isMounted = false;
@@ -328,7 +384,7 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
         file
       );
 
-      if (!result.success) {
+      if (result.success === false) {
         toast({
           title: "Booking failed",
           description: result.error,
