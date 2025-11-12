@@ -98,6 +98,57 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings: {
+        Row: {
+          confirmed_by_id: string | null
+          created_at: string
+          id: string
+          payment_amount: number
+          receipt_url: string
+          resource_id: string
+          slot_id: string
+          status: "Pending" | "Confirmed" | "Rejected"
+          user_id: string
+        }
+        Insert: {
+          confirmed_by_id?: string | null
+          created_at?: string
+          id?: string
+          payment_amount: number
+          receipt_url: string
+          resource_id: string
+          slot_id: string
+          status?: "Pending" | "Confirmed" | "Rejected"
+          user_id: string
+        }
+        Update: {
+          confirmed_by_id?: string | null
+          created_at?: string
+          id?: string
+          payment_amount?: number
+          receipt_url?: string
+          resource_id?: string
+          slot_id?: string
+          status?: "Pending" | "Confirmed" | "Rejected"
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "business_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: true
+            referencedRelation: "slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookmarks: {
         Row: {
           business_id: string
@@ -780,6 +831,13 @@ export type Database = {
             columns: ["resource_id"]
             isOneToOne: false
             referencedRelation: "business_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slots_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]
