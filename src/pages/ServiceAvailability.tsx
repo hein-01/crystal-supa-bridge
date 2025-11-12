@@ -15,9 +15,18 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import SubmitReceiptModal, { type PaymentMethodInfo } from "@/components/SubmitReceiptModal";
+import { submitBooking } from "@/lib/bookingActions";
 
 // Minimal currency formatter – adjust currency if needed
-const currency = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
+const currency = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "MMK",
+  maximumFractionDigits: 0,
+});
 
 // Types from generated supabase types
 type Resource = Pick<Tables<"business_resources">, "id" | "name" | "business_id">;
@@ -84,12 +93,27 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
 
   const [selectedSlotIds, setSelectedSlotIds] = useState<Set<string>>(new Set());
   const [disabledDays, setDisabledDays] = useState<number[] | null>(null); // 0=Sun..6=Sat for DayPicker
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
+  const [paymentMethodsError, setPaymentMethodsError] = useState<string | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const total = useMemo(() => {
     const selected = new Set(selectedSlotIds);
     return slots
       .filter((s) => selected.has(s.id))
       .reduce((sum, s) => sum + (s.slot_price || 0), 0);
+  }, [selectedSlotIds, slots]);
+
+  const selectedSlot = useMemo(() => {
+    if (selectedSlotIds.size !== 1) return null;
+    const slotId = Array.from(selectedSlotIds)[0];
+    return slots.find((slot) => slot.id === slotId) || null;
   }, [selectedSlotIds, slots]);
 
   const slotMatrix = useMemo<SlotMatrixRow[]>(() => {
@@ -196,11 +220,143 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
     if (slot.is_booked) return; // can't select booked slot
     setSelectedSlotIds((prev) => {
       const next = new Set(prev);
-      if (next.has(slot.id)) next.delete(slot.id);
-      else next.add(slot.id);
-      return next;
+      if (next.has(slot.id)) {
+        next.delete(slot.id);
+        return next;
+      }
+      return new Set([slot.id]);
     });
   }
+
+  useEffect(() => {
+    if (!businessId) {
+      setPaymentMethods([]);
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingPaymentMethods(true);
+    setPaymentMethodsError(null);
+
+    supabase
+      .from("payment_methods")
+      .select("method_type, account_name, account_number")
+      .eq("business_id", businessId)
+      .then(({ data, error: paymentError }) => {
+        if (!isMounted) return;
+        if (paymentError) {
+          console.error("Failed to load payment methods", paymentError);
+          setPaymentMethods([]);
+          setPaymentMethodsError("Unable to load payment instructions for this service.");
+          return;
+        }
+        setPaymentMethods(data || []);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingPaymentMethods(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [businessId]);
+
+  useEffect(() => {
+    if (paymentMethodsError) {
+      toast({
+        title: "Payment instructions unavailable",
+        description: paymentMethodsError,
+        variant: "destructive",
+      });
+    }
+  }, [paymentMethodsError, toast]);
+
+  const handleBookNow = () => {
+    if (!selectedSlot) {
+      toast({
+        title: "Select a slot",
+        description: "Please choose a time slot to continue your booking.",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to submit your booking and upload a payment receipt.",
+        variant: "destructive",
+      });
+      navigate("/auth/signin");
+      return;
+    }
+
+    if (loadingPaymentMethods) {
+      toast({
+        title: "Preparing payment details",
+        description: "Please wait a moment while we load the payment instructions.",
+      });
+      return;
+    }
+
+    if (paymentMethods.length === 0) {
+      toast({
+        title: "Payment instructions missing",
+        description: "We could not find transfer details yet. Contact the renter to confirm before proceeding.",
+        variant: "destructive",
+      });
+    }
+
+    setShowReceiptModal(true);
+  };
+
+  const handleSubmitReceipt = async (file: File) => {
+    if (!selectedSlot || !user) return;
+    if (selectedSlot.slot_price === null || selectedSlot.slot_price === undefined) {
+      toast({
+        title: "Slot pricing unavailable",
+        description: "We could not verify the slot price. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsSubmittingBooking(true);
+    try {
+      const result = await submitBooking(
+        selectedSlot.id,
+        user.id,
+        Number(selectedSlot.slot_price),
+        file
+      );
+
+      if (!result.success) {
+        toast({
+          title: "Booking failed",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Booking submitted",
+        description: "We received your receipt. Sit tight while the renter confirms your booking.",
+      });
+
+      setShowReceiptModal(false);
+      setSelectedSlotIds(new Set());
+      setSlots((prev) =>
+        prev.map((slot) =>
+          slot.id === selectedSlot.id
+            ? { ...slot, is_booked: true, booking_id: result.bookingId }
+            : slot
+        )
+      );
+
+      navigate(`/bookings/${result.bookingId}/pending`);
+    } finally {
+      setIsSubmittingBooking(false);
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-background via-muted/20 to-background flex flex-col">
@@ -386,16 +542,22 @@ export default function ServiceAvailability(props: ServiceAvailabilityProps) {
             size="lg"
             variant="secondary"
             className="w-full sm:w-auto px-8 py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
-            disabled={selectedSlotIds.size === 0}
-            onClick={() => {
-              // Placeholder booking handler – integrate your booking flow here
-              console.log("Booking slots:", Array.from(selectedSlotIds));
-            }}
+            disabled={selectedSlotIds.size !== 1}
+            onClick={handleBookNow}
           >
             BOOK NOW
           </Button>
         </div>
       </div>
+
+      <SubmitReceiptModal
+        open={showReceiptModal}
+        onClose={() => setShowReceiptModal(false)}
+        paymentMethods={paymentMethods}
+        amount={total}
+        isSubmitting={isSubmittingBooking}
+        onSubmit={handleSubmitReceipt}
+      />
     </div>
   );
 }

@@ -28,6 +28,7 @@ import PostAJob from "./pages/PostAJob";
 import ServiceAvailability from "./pages/ServiceAvailability";
 import MobileNavBar from "./components/MobileNavBar";
 import ScrollToTop from "./components/ScrollToTop";
+import PendingConfirmationPage from "./pages/PendingConfirmation";
 
 const queryClient = new QueryClient(); // Refresh trigger
 
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/list-futsal-court" element={<FutsalCourtListing />} />
             {/* Service availability demo route (accepts ?resourceId=&date=YYYY-MM-DD) */}
             <Route path="/availability" element={<ServiceAvailability />} />
+            <Route path="/bookings/:bookingId/pending" element={<PendingConfirmationPage />} />
             <Route path="/auth/signin" element={<Auth />} />
             <Route path="/auth/signup" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
