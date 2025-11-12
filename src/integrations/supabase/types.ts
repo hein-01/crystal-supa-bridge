@@ -14,60 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      job_titles_translation: {
-        Row: {
-          title_key: string
-          label_en: string
-          label_my: string
-        }
-        Insert: {
-          title_key: string
-          label_en: string
-          label_my: string
-        }
-        Update: {
-          title_key?: string
-          label_en?: string
-          label_my?: string
-        }
-        Relationships: []
-      }
-      locations_translation: {
-        Row: {
-          location_key: string
-          label_en: string
-          label_my: string
-        }
-        Insert: {
-          location_key: string
-          label_en: string
-          label_my: string
-        }
-        Update: {
-          location_key?: string
-          label_en?: string
-          label_my?: string
-        }
-        Relationships: []
-      }
-      education_translation: {
-        Row: {
-          education_key: string
-          label_en: string
-          label_my: string
-        }
-        Insert: {
-          education_key: string
-          label_en: string
-          label_my: string
-        }
-        Update: {
-          education_key?: string
-          label_en?: string
-          label_my?: string
-        }
-        Relationships: []
-      }
       admin_users: {
         Row: {
           admin_role: string | null
@@ -98,6 +44,24 @@ export type Database = {
         }
         Relationships: []
       }
+      benefits_translation: {
+        Row: {
+          benefit_key: string
+          label_en: string
+          label_my: string
+        }
+        Insert: {
+          benefit_key: string
+          label_en: string
+          label_my: string
+        }
+        Update: {
+          benefit_key?: string
+          label_en?: string
+          label_my?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           confirmed_by_id: string | null
@@ -107,7 +71,8 @@ export type Database = {
           receipt_url: string
           resource_id: string
           slot_id: string
-          status: "Pending" | "Confirmed" | "Rejected"
+          status: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -118,7 +83,8 @@ export type Database = {
           receipt_url: string
           resource_id: string
           slot_id: string
-          status?: "Pending" | "Confirmed" | "Rejected"
+          status?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -129,7 +95,8 @@ export type Database = {
           receipt_url?: string
           resource_id?: string
           slot_id?: string
-          status?: "Pending" | "Confirmed" | "Rejected"
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -461,77 +428,141 @@ export type Database = {
         }
         Relationships: []
       }
-      job_postings: {
+      education_translation: {
         Row: {
-          id: string
-          created_at: string
-          job_title_key: string | null
-          job_location_key: string | null
-          education_key: string | null
-          job_title_custom: string | null
-          education_custom: string | null
-          salary_structure: string
-          salary_type: string
-          salary_min: number | null
-          salary_max: number | null
-          description_my: string | null
-          description_en: string | null
-          business_name: string | null
-          job_type: string | null
-          age_min: number | null
-          age_max: number | null
-          benefits: string[] | null
-          application_deadline: string | null
-          whatsapp_number: string | null
-          phone_number: string | null
+          education_key: string
+          label_en: string
+          label_my: string
         }
         Insert: {
-          id?: string
-          created_at?: string
-          job_title_key?: string | null
-          job_location_key?: string | null
-          education_key?: string | null
-          job_title_custom?: string | null
-          education_custom?: string | null
-          salary_structure: string
-          salary_type: string
-          salary_min?: number | null
-          salary_max?: number | null
-          description_my?: string | null
-          description_en?: string | null
-          business_name?: string | null
-          job_type?: string | null
-          age_min?: number | null
-          age_max?: number | null
-          benefits?: string[] | null
-          application_deadline?: string | null
-          whatsapp_number?: string | null
-          phone_number?: string | null
+          education_key: string
+          label_en: string
+          label_my: string
         }
         Update: {
-          id?: string
-          created_at?: string
-          job_title_key?: string | null
-          job_location_key?: string | null
-          education_key?: string | null
-          job_title_custom?: string | null
-          education_custom?: string | null
-          salary_structure?: string
-          salary_type?: string
-          salary_min?: number | null
-          salary_max?: number | null
-          description_my?: string | null
-          description_en?: string | null
-          business_name?: string | null
-          job_type?: string | null
-          age_min?: number | null
-          age_max?: number | null
-          benefits?: string[] | null
-          application_deadline?: string | null
-          whatsapp_number?: string | null
-          phone_number?: string | null
+          education_key?: string
+          label_en?: string
+          label_my?: string
         }
         Relationships: []
+      }
+      job_postings: {
+        Row: {
+          age_max: number | null
+          age_min: number | null
+          application_deadline: string
+          benefits: string[] | null
+          business_name: string
+          contact_number: string
+          created_at: string
+          description: string
+          description_en: string | null
+          description_my: string | null
+          education_custom: string | null
+          education_key: string | null
+          education_requirement: string
+          id: string
+          job_location: string
+          job_location_key: string | null
+          job_title: string
+          job_title_custom: string | null
+          job_title_key: string | null
+          job_type: string
+          phone_number: string | null
+          salary_amount: string
+          salary_max: number | null
+          salary_min: number | null
+          salary_structure: string | null
+          salary_type: string
+          updated_at: string
+          user_id: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          age_max?: number | null
+          age_min?: number | null
+          application_deadline: string
+          benefits?: string[] | null
+          business_name: string
+          contact_number: string
+          created_at?: string
+          description: string
+          description_en?: string | null
+          description_my?: string | null
+          education_custom?: string | null
+          education_key?: string | null
+          education_requirement: string
+          id?: string
+          job_location: string
+          job_location_key?: string | null
+          job_title: string
+          job_title_custom?: string | null
+          job_title_key?: string | null
+          job_type: string
+          phone_number?: string | null
+          salary_amount: string
+          salary_max?: number | null
+          salary_min?: number | null
+          salary_structure?: string | null
+          salary_type: string
+          updated_at?: string
+          user_id: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          age_max?: number | null
+          age_min?: number | null
+          application_deadline?: string
+          benefits?: string[] | null
+          business_name?: string
+          contact_number?: string
+          created_at?: string
+          description?: string
+          description_en?: string | null
+          description_my?: string | null
+          education_custom?: string | null
+          education_key?: string | null
+          education_requirement?: string
+          id?: string
+          job_location?: string
+          job_location_key?: string | null
+          job_title?: string
+          job_title_custom?: string | null
+          job_title_key?: string | null
+          job_type?: string
+          phone_number?: string | null
+          salary_amount?: string
+          salary_max?: number | null
+          salary_min?: number | null
+          salary_structure?: string | null
+          salary_type?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_postings_education_key_fkey"
+            columns: ["education_key"]
+            isOneToOne: false
+            referencedRelation: "education_translation"
+            referencedColumns: ["education_key"]
+          },
+          {
+            foreignKeyName: "job_postings_job_location_key_fkey"
+            columns: ["job_location_key"]
+            isOneToOne: false
+            referencedRelation: "locations_translation"
+            referencedColumns: ["location_key"]
+          },
+          {
+            foreignKeyName: "job_postings_job_title_key_fkey"
+            columns: ["job_title_key"]
+            isOneToOne: false
+            referencedRelation: "job_titles_translation"
+            referencedColumns: ["title_key"]
+          },
+        ]
       }
       job_reports: {
         Row: {
@@ -565,6 +596,24 @@ export type Database = {
           },
         ]
       }
+      job_titles_translation: {
+        Row: {
+          label_en: string
+          label_my: string
+          title_key: string
+        }
+        Insert: {
+          label_en: string
+          label_my: string
+          title_key: string
+        }
+        Update: {
+          label_en?: string
+          label_my?: string
+          title_key?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           created_at: string
@@ -586,6 +635,24 @@ export type Database = {
           province_district?: string
           towns?: string[]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      locations_translation: {
+        Row: {
+          label_en: string
+          label_my: string
+          location_key: string
+        }
+        Insert: {
+          label_en: string
+          label_my: string
+          location_key: string
+        }
+        Update: {
+          label_en?: string
+          label_my?: string
+          location_key?: string
         }
         Relationships: []
       }
@@ -723,6 +790,47 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_pricing_rules: {
+        Row: {
+          created_at: string
+          day_of_week: number[] | null
+          end_time: string
+          id: string
+          price_override: number
+          resource_id: string
+          rule_name: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: number[] | null
+          end_time: string
+          id?: string
+          price_override: number
+          resource_id: string
+          rule_name: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number[] | null
+          end_time?: string
+          id?: string
+          price_override?: number
+          resource_id?: string
+          rule_name?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_pricing_rules_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "business_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           category_id: string
@@ -831,13 +939,6 @@ export type Database = {
             columns: ["resource_id"]
             isOneToOne: false
             referencedRelation: "business_resources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "slots_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]
